@@ -1,0 +1,13 @@
+﻿syntax = "proto3";
+package tutorial;
+
+message VideoMetadata {
+  int32 id = 1;
+  bool processing = 2;
+  string title = 3;
+  int32 duration = 4;
+  int32 bpm = 5;
+  int32 size = 6;
+  int32 bitrate = 7;
+}
+option csharp_namespace = "Google.Protobuf.Types";

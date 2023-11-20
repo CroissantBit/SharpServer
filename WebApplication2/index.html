@@ -1,0 +1,44 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<form action="/upload" method="post" enctype="multipart/form-data" >
+    <input type="file" name="file">
+    <br>
+    <label for="isPrivate">Check if you wanna make the song private : </label>
+    <input type="checkbox" name="private" value="true" id="isPrivate">
+    <br>
+    <label for="password">Passwort : </label>
+    <input type="text" name="password" value="" id="passwordInput">
+    <br>
+    <label for="songName">Songname : </label>
+    <input type="text" name="songName" value="">
+    <br>
+    <label for="bpm">BPM : </label>
+    <input type="text" name="bpm" value="" id="bpm">
+    <br>
+    <button type="submit">Submit</button>
+</form>
+</body>
+
+<script>
+    const checkBox = document.querySelector("#isPrivate");
+    const passwordInput = document.querySelector("#passwordInput");
+    passwordInput.style.display = "none";
+    checkBox.onclick = () => {
+        if(checkBox.checked)
+        {
+            passwordInput.style.display = "block";
+        }else {
+
+            passwordInput.style.display = "none";
+        }
+    }
+</script>
+</html>
