@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using FFMpegWrapper;
 
-namespace WebApplication2;
+namespace SharpServer;
 
 public class PlayController
 {

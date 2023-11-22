@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;using Amazon.S3;
 using FFMpegWrapper;
 using Serilog;
-using WebApplication2;
+using SharpServer;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();

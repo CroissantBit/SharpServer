@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>SharpServer</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,14 +31,14 @@
       <_ContentIncludedByDefault Remove="test\appsettings.json" />
       <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.Development.json" />
       <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\WebApplication2.deps.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\WebApplication2.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.deps.json" />
+      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.runtimeconfig.json" />
       <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.Development.json" />
       <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\WebApplication2.deps.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\WebApplication2.runtimeconfig.json" />
-      <_ContentIncludedByDefault Remove="test\WebApplication2.deps.json" />
-      <_ContentIncludedByDefault Remove="test\WebApplication2.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.deps.json" />
+      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.runtimeconfig.json" />
+      <_ContentIncludedByDefault Remove="test\SharpServer.deps.json" />
+      <_ContentIncludedByDefault Remove="test\SharpServer.runtimeconfig.json" />
     </ItemGroup>
 
 </Project>

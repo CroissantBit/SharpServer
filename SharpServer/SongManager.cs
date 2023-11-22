@@ -2,7 +2,7 @@
 using Serilog;
 using Timer = System.Timers.Timer;
 
-namespace WebApplication2;
+namespace SharpServer;
 
 public class SongManager
 {
