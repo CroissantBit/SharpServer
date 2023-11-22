@@ -13,7 +13,6 @@ public class DataBaseTable
             if (firstLine)
             {
                 firstLine = false;
-               
             }
             else
             {
@@ -35,5 +34,4 @@ public class DataBaseTable
     {
         return this;
     }
-    
 }

@@ -31,7 +31,7 @@ namespace FFMpegWrapper
             return Instance;
         }
 
-        private FFmpegConfig(String path, bool useShellExecute, bool createAWindow )
+        private FFmpegConfig(String path, bool useShellExecute, bool createAWindow)
         {
             _path = path;
             _useShellExecute = useShellExecute;

@@ -18,8 +18,11 @@ public class FileServer
         {
             ServiceURL = "https://5f1f59614d2c85173d227fcc83ce4971.r2.cloudflarestorage.com"
         };
-        client = new AmazonS3Client("8f99e382c9899098e3cdbca4deb0eab5",
-            "26f2e54861d14c28c43b57f3d47f34cc8f518f5a9dd0cab83fe38e77bac9c067", s3Config);
+        client = new AmazonS3Client(
+            "8f99e382c9899098e3cdbca4deb0eab5",
+            "26f2e54861d14c28c43b57f3d47f34cc8f518f5a9dd0cab83fe38e77bac9c067",
+            s3Config
+        );
         bucketName = "iukprojekt";
     }
 
@@ -32,8 +35,8 @@ public class FileServer
 
         return _instance;
     }
-    
-    public async Task<bool> UploadFileAsync( string objectName, string filePath, string fileType)
+
+    public async Task<bool> UploadFileAsync(string objectName, string filePath, string fileType)
     {
         var request = new PutObjectRequest
         {
@@ -53,22 +56,20 @@ public class FileServer
 
         Console.WriteLine($"Could not upload {objectName} to {bucketName}.");
         return false;
-        
     }
-    
-    public async Task<bool> DownloadFileAsync( string objectName, string filePath)
+
+    public async Task<bool> DownloadFileAsync(string objectName, string filePath)
     {
-        
-        var request = new GetObjectRequest
-        {
-            BucketName = bucketName,
-            Key = objectName,
-        };
-        
+        var request = new GetObjectRequest { BucketName = bucketName, Key = objectName, };
+
         using GetObjectResponse response = await client.GetObjectAsync(request);
         try
         {
-            await response.WriteResponseStreamToFileAsync($"{filePath}\\{objectName}", true, CancellationToken.None);
+            await response.WriteResponseStreamToFileAsync(
+                $"{filePath}\\{objectName}",
+                true,
+                CancellationToken.None
+            );
             return response.HttpStatusCode == System.Net.HttpStatusCode.OK;
         }
         catch (AmazonS3Exception ex)

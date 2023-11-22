@@ -22,7 +22,9 @@ public class PlayController
             return "Nah nah nah";
         }
 
-        var list = Database.GetDatabase().Query<Song>("select * from songs where id = " + songId + ";");
+        var list = Database
+            .GetDatabase()
+            .Query<Song>("select * from songs where id = " + songId + ";");
         var path = "./bin/Mp4Files";
         var filenames = Directory.GetFiles(path);
         var songIsOnLocalSystem = false;
@@ -34,14 +36,17 @@ public class PlayController
                 return list[0].Songname;
             }
 
-
         Console.WriteLine("start downlaoding");
         var mp4Name = list[0].Songname + ".mp4";
         var mp3Name = list[0].Songname + ".wav";
         try
         {
-            var taskMp4Download = FileServer.GetFileServer().DownloadFileAsync(mp4Name, "./bin/Mp4Files");
-            var taskMp3Download = FileServer.GetFileServer().DownloadFileAsync(mp3Name, "./bin/WavFiles");
+            var taskMp4Download = FileServer
+                .GetFileServer()
+                .DownloadFileAsync(mp4Name, "./bin/Mp4Files");
+            var taskMp3Download = FileServer
+                .GetFileServer()
+                .DownloadFileAsync(mp3Name, "./bin/WavFiles");
             Task.WaitAll(taskMp4Download, taskMp3Download);
             Console.WriteLine("Download complete");
         }
@@ -51,7 +56,6 @@ public class PlayController
             _httpContext.Response.StatusCode = 503;
             throw new Exception("Unable to downlaod files");
         }
-
 
         _httpContext.Response.StatusCode = 200;
         return "Song found";

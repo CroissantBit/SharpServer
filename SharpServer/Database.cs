@@ -9,7 +9,8 @@ public class Database
 
     public Database()
     {
-        string connectionString = "Server=sql11.freesqldatabase.com;Database=sql11661704;User=sql11661704;Password=bcsu95BFXm;";
+        string connectionString =
+            "Server=sql11.freesqldatabase.com;Database=sql11661704;User=sql11661704;Password=bcsu95BFXm;";
         _mySqlConnection = new MySqlConnection(connectionString);
         try
         {
@@ -38,10 +39,11 @@ public class Database
         return _instance;
     }
 
-    public List<T> Query<T>(string command) where T : new() 
+    public List<T> Query<T>(string command)
+        where T : new()
     {
         List<T> list = new List<T>();
-        
+
         using (MySqlCommand cmd = new MySqlCommand(command, _mySqlConnection))
         {
             using (MySqlDataReader reader = cmd.ExecuteReader())
@@ -62,8 +64,9 @@ public class Database
 
         return list;
     }
-    
-    public List<T> Insert<T>(string command,String[] data) where T : new() 
+
+    public List<T> Insert<T>(string command, String[] data)
+        where T : new()
     {
         List<T> list = new List<T>();
         command = fillCommandStr(command, data);
@@ -113,7 +116,7 @@ public class Database
         {
             index = command.LastIndexOf('?');
             command = command.Remove(index, 1);
-            command = command.Insert(index , data[counter]);
+            command = command.Insert(index, data[counter]);
             counter--;
         }
         return command.Replace("?", "");

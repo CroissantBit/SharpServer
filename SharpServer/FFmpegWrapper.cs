@@ -15,6 +15,7 @@ namespace FFMpegWrapper
         protected FFmpegConfig _config = null;
         private bool _disposed = false;
         private Process _process;
+
         //ffmpeg -i output.mp4 2>&1 | findstr Duration
         public static FFmpegWrapper GetFFmpegWrapper()
         {
@@ -27,7 +28,6 @@ namespace FFMpegWrapper
 
             return Instance;
         }
-
 
         private FFmpegWrapper(FFmpegConfig config)
         {
@@ -45,10 +45,8 @@ namespace FFMpegWrapper
             _process.StartInfo.RedirectStandardError = true;
         }
 
-
         public void Dispose()
         {
-            
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -70,7 +68,9 @@ namespace FFMpegWrapper
         {
             try
             {
-                string command = $" -i ./bin/Mp4Files/{fileName}.mp4 -vn -ar 44100 -ac 2 -ab 192k -f wav " + path;
+                string command =
+                    $" -i ./bin/Mp4Files/{fileName}.mp4 -vn -ar 44100 -ac 2 -ab 192k -f wav "
+                    + path;
                 _process.StartInfo.Arguments = command;
                 _process.Start();
                 _process.WaitForExit();
@@ -80,16 +80,14 @@ namespace FFMpegWrapper
             {
                 Console.WriteLine(e);
             }
-
-             
         }
-        
+
         public string customCommand(string command)
         {
             try
             {
                 _process.StartInfo.Arguments = command;
-                
+
                 _process.Start();
                 StreamReader reade2 = _process.StandardError;
                 string outputt = reade2.ReadToEnd();
@@ -102,10 +100,8 @@ namespace FFMpegWrapper
                 Console.WriteLine(e);
                 throw new Exception(e.Message);
             }
-
-             
         }
-        
+
         static string GetDurationLine(string output)
         {
             string[] lines = output.Split('\n');
@@ -124,130 +120,126 @@ namespace FFMpegWrapper
         {
             var commands = $"-i ./bin/Mp4Files/{songName}.mp4";
             var output = customCommand(commands);
-             
+
             return output;
         }
-        
-        public async  Task<string> customCommandTest(String command)
-                {
-                    MemoryStream copyStream = new MemoryStream();
-                    //MemoryStream inputStream = new MemoryStream();
-                    try
-                    {
-                        string result = String.Empty;
-        
-                        _process.StartInfo.Arguments = command;
-                        _process.StartInfo.RedirectStandardError = false;
-                        _process.StartInfo.RedirectStandardInput = false;
-                        
-                        _process.Start();
-                        var inputStream = _process.StandardOutput.BaseStream;
-                        bool headerFound = false;
-                        int counterFrames = 0;
-                        var watch = new System.Diagnostics.Stopwatch();
-                        watch.Start();
-                        while (_process.StandardOutput.Peek() > -1)
-                        {
-                            
-                            if (!headerFound)
-                            {
-                                
-                                byte[] chunkHeader = new byte[8];
-                                for (int j = 0; j < 8; j++)
-                                {
-                                    byte[] tempBuf = new byte[1];
-                                    int x = inputStream.Read(tempBuf, 0, 1);
-                                    if (x == 0)
-                                    {
-                                        j--;
-                             
-                                        continue;
-                                    }
 
-                                    chunkHeader[j] = tempBuf[0];
-                                }
-        
-                                headerFound = true;
-                                copyStream.Write(chunkHeader, 0, 8);
-                            }
-                            byte[] chunk = new byte[4];
-                            for (int j = 0; j < 4; j++)
+        public async Task<string> customCommandTest(String command)
+        {
+            MemoryStream copyStream = new MemoryStream();
+            //MemoryStream inputStream = new MemoryStream();
+            try
+            {
+                string result = String.Empty;
+
+                _process.StartInfo.Arguments = command;
+                _process.StartInfo.RedirectStandardError = false;
+                _process.StartInfo.RedirectStandardInput = false;
+
+                _process.Start();
+                var inputStream = _process.StandardOutput.BaseStream;
+                bool headerFound = false;
+                int counterFrames = 0;
+                var watch = new System.Diagnostics.Stopwatch();
+                watch.Start();
+                while (_process.StandardOutput.Peek() > -1)
+                {
+                    if (!headerFound)
+                    {
+                        byte[] chunkHeader = new byte[8];
+                        for (int j = 0; j < 8; j++)
+                        {
+                            byte[] tempBuf = new byte[1];
+                            int x = inputStream.Read(tempBuf, 0, 1);
+                            if (x == 0)
                             {
-                                byte[] tempBuf = new byte[1];
-                                int x = inputStream.Read(tempBuf, 0, 1);
-                                if (x == 0)
-                                {
-                                    j--;
-                                    continue;
-                                }
-                                chunk[j] = tempBuf[0];
+                                j--;
+
+                                continue;
                             }
-                            copyStream.Write(chunk, 0, 4);
-                            if (BitConverter.IsLittleEndian)
-                            {
-                                Array.Reverse(chunk);
-                            }
-        
-                            int i = BitConverter.ToInt32(chunk, 0);
-        
-                            chunk = new byte[4];
-                            for (int j = 0; j < 4; j++)
-                            {
-                                byte[] tempBuf = new byte[1];
-                                int x = inputStream.Read(tempBuf, 0, 1);
-                                if (x == 0)
-                                {
-                                    j--;
-                                    continue;
-                                }
-                                
-                                chunk[j] = tempBuf[0];
-                            }
-                            copyStream.Write(chunk, 0, 4);
-        
-                            var str = Encoding.ASCII.GetChars(chunk);
-                            
-                            byte[] tempByteArray = new byte[i + 4];
-                            for (int j = 0; j < i + 4; j++)
-                            {
-                                byte[] tempBuf = new byte[1];
-                                int x = inputStream.Read(tempBuf, 0, 1);
-                                if (x == 0)
-                                {
-                                    j--;
-                                    continue;
-                                }
-                                tempByteArray[j] = tempBuf[0];
-                            }
-                            copyStream.Write(tempByteArray, 0, i + 4);
-                            if (new string(str) == "IEND")
-                            {
-                                counterFrames++;
-                                parseBitmap(copyStream, watch);
-                                copyStream.Dispose();
-                                copyStream = new MemoryStream();
-                                inputStream.Flush();
-                                headerFound = false;
-                            }
-        
+
+                            chunkHeader[j] = tempBuf[0];
                         }
-                        _process.WaitForExit();
-                        Console.WriteLine("soemthing wrong");
-                        return result;
+
+                        headerFound = true;
+                        copyStream.Write(chunkHeader, 0, 8);
                     }
-                    catch (Exception e)
+                    byte[] chunk = new byte[4];
+                    for (int j = 0; j < 4; j++)
                     {
-                        Console.WriteLine(e);
+                        byte[] tempBuf = new byte[1];
+                        int x = inputStream.Read(tempBuf, 0, 1);
+                        if (x == 0)
+                        {
+                            j--;
+                            continue;
+                        }
+                        chunk[j] = tempBuf[0];
                     }
-                    finally
+                    copyStream.Write(chunk, 0, 4);
+                    if (BitConverter.IsLittleEndian)
                     {
+                        Array.Reverse(chunk);
+                    }
+
+                    int i = BitConverter.ToInt32(chunk, 0);
+
+                    chunk = new byte[4];
+                    for (int j = 0; j < 4; j++)
+                    {
+                        byte[] tempBuf = new byte[1];
+                        int x = inputStream.Read(tempBuf, 0, 1);
+                        if (x == 0)
+                        {
+                            j--;
+                            continue;
+                        }
+
+                        chunk[j] = tempBuf[0];
+                    }
+                    copyStream.Write(chunk, 0, 4);
+
+                    var str = Encoding.ASCII.GetChars(chunk);
+
+                    byte[] tempByteArray = new byte[i + 4];
+                    for (int j = 0; j < i + 4; j++)
+                    {
+                        byte[] tempBuf = new byte[1];
+                        int x = inputStream.Read(tempBuf, 0, 1);
+                        if (x == 0)
+                        {
+                            j--;
+                            continue;
+                        }
+                        tempByteArray[j] = tempBuf[0];
+                    }
+                    copyStream.Write(tempByteArray, 0, i + 4);
+                    if (new string(str) == "IEND")
+                    {
+                        counterFrames++;
+                        parseBitmap(copyStream, watch);
                         copyStream.Dispose();
-                        
+                        copyStream = new MemoryStream();
+                        inputStream.Flush();
+                        headerFound = false;
                     }
-                    _process.StartInfo.RedirectStandardError = true;
-                    return String.Empty;
                 }
-        
+                _process.WaitForExit();
+                Console.WriteLine("soemthing wrong");
+                return result;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                copyStream.Dispose();
+            }
+            _process.StartInfo.RedirectStandardError = true;
+            return String.Empty;
+        }
+
         private static void parseBitmap(Stream stream, Stopwatch watch)
         {
             // Create a Bitmap object from the byte array
@@ -265,19 +257,23 @@ namespace FFMpegWrapper
             using (Bitmap bmp = bitmap)
             {
                 string WrittenLine = "";
-                for (int y = 0; y < bmp.Size.Height - (bmp.Size.Height % pixelInterval); y += pixelInterval)
+                for (
+                    int y = 0;
+                    y < bmp.Size.Height - (bmp.Size.Height % pixelInterval);
+                    y += pixelInterval
+                )
                 {
                     for (int x = 0; x < bmp.Size.Width; x++)
                     {
-                        if (x % pixelInterval == 0 ||
-                            x % pixelInterval == 1) // The character height-width-ratio is approximately 2/1
+                        if (x % pixelInterval == 0 || x % pixelInterval == 1) // The character height-width-ratio is approximately 2/1
                         {
                             //can get color from pixel here aswell
-                            WrittenLine +=
-                                GetSymbolFromBrightness(bmp.GetPixel(x, y).GetBrightness() * brightnessMultiplier);
+                            WrittenLine += GetSymbolFromBrightness(
+                                bmp.GetPixel(x, y).GetBrightness() * brightnessMultiplier
+                            );
                         }
                     }
-                    
+
                     Console.WriteLine(WrittenLine);
                     WrittenLine = "";
                 }
@@ -295,7 +291,7 @@ namespace FFMpegWrapper
 
             //a frame should be seen for 42 ms
             // processing takes up often more than 90 ms but i guess thats because of console.writeline
-            
+
 
             Log.Logger.Debug(cv.ToString() + " tesdt " + watch.ElapsedMilliseconds);
             Console.WriteLine(cv);
@@ -332,6 +328,5 @@ namespace FFMpegWrapper
                     return " ";
             }
         }
-        
     }
 }
