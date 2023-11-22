@@ -8,36 +8,45 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AWSSDK.Core" Version="3.7.300.4" />
-      <PackageReference Include="AWSSDK.S3" Version="3.7.300.4" />
-      <PackageReference Include="DotNetEnv" Version="2.5.0" />
-      <PackageReference Include="Google.Protobuf" Version="3.25.1" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-      <PackageReference Include="MySql.Data" Version="8.2.0" />
-      <PackageReference Include="NAudio" Version="2.2.1" />
-      <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
-      <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
-      <PackageReference Include="TagLibSharp" Version="2.3.0" />
+        <PackageReference Include="AWSSDK.Core" Version="3.7.300.4"/>
+        <PackageReference Include="AWSSDK.S3" Version="3.7.300.4"/>
+        <PackageReference Include="DotNetEnv" Version="2.5.0"/>
+        <PackageReference Include="Google.Protobuf" Version="3.25.1"/>
+        <PackageReference Include="Google.Protobuf.Tools" Version="3.25.1" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0"/>
+        <PackageReference Include="MySql.Data" Version="8.2.0"/>
+        <PackageReference Include="NAudio" Version="2.2.1"/>
+        <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0"/>
+        <PackageReference Include="System.Drawing.Common" Version="7.0.0"/>
+        <PackageReference Include="TagLibSharp" Version="2.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Logs" />
+        <Folder Include="Logs"/>
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="test\web.config" />
-      <_ContentIncludedByDefault Remove="test\appsettings.Development.json" />
-      <_ContentIncludedByDefault Remove="test\appsettings.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.Development.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.deps.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.runtimeconfig.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.Development.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.deps.json" />
-      <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.runtimeconfig.json" />
-      <_ContentIncludedByDefault Remove="test\SharpServer.deps.json" />
-      <_ContentIncludedByDefault Remove="test\SharpServer.runtimeconfig.json" />
+        <_ContentIncludedByDefault Remove="test\web.config"/>
+        <_ContentIncludedByDefault Remove="test\appsettings.Development.json"/>
+        <_ContentIncludedByDefault Remove="test\appsettings.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.Development.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\appsettings.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.deps.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Debug\net6.0\SharpServer.runtimeconfig.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.Development.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\appsettings.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.deps.json"/>
+        <_ContentIncludedByDefault Remove="test\bin\Release\net6.0\win-x64\SharpServer.runtimeconfig.json"/>
+        <_ContentIncludedByDefault Remove="test\SharpServer.deps.json"/>
+        <_ContentIncludedByDefault Remove="test\SharpServer.runtimeconfig.json"/>
     </ItemGroup>
+
+    <Target Name="PreBuildWindows" BeforeTargets="PreBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+        <Exec Command="$(NugetPackageRoot)google.protobuf.tools\3.25.1\tools\windows_x64\protoc.exe -I=$(SolutionDir)proto\src --csharp_out=$(ProjectDir)Generated $(SolutionDir)proto\src\*.proto"/>
+    </Target>
+
+    <Target Name="PreBuildLinux" BeforeTargets="PreBuildEvent" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+        <Exec Command="$(NugetPackageRoot)google.protobuf.tools/3.25.1/tools/linux_x64/protoc -I=$(SolutionDir)proto/src --csharp_out=$(ProjectDir)Generated $(SolutionDir)proto/src/*.proto"/>
+    </Target>
 
 </Project>
