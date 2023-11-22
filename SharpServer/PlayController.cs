@@ -19,7 +19,7 @@ public class PlayController
         if (!regex.IsMatch(songId))
         {
             _httpContext.Response.StatusCode = 403;
-            return "Nah nah nah";
+            throw new Exception("nah nah nah");
         }
 
         var list = Database
@@ -58,6 +58,6 @@ public class PlayController
         }
 
         _httpContext.Response.StatusCode = 200;
-        return "Song found";
+        return list[0].Songname;
     }
 }

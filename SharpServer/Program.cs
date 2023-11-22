@@ -103,7 +103,16 @@ app.MapGet(
         try
         {
             PlayController playController = new PlayController(context);
-            string songName = await playController.Handle();
+            string songName = "";
+            try
+            {
+                songName = await playController.Handle();
+            }
+            catch (Exception e)
+            {
+                await context.Response.WriteAsync(e.Message);
+                return;
+            }
             SongManager songManager = new SongManager(songName);
             Task o = songManager.playAudio();
             //chnage 140x80 to something higher in order to see ascii art better
