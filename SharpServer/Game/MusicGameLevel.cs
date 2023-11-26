@@ -1,4 +1,4 @@
-﻿namespace SharpServer;
+﻿namespace SharpServer.Game;
 
 public class MusicGameLevel
 {

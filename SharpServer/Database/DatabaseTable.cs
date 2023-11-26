@@ -1,6 +1,6 @@
-﻿namespace FFMpegWrapper;
+﻿namespace SharpServer.Database;
 
-public class DataBaseTable
+public class DatabaseTable
 {
     public string ToJson()
     {
@@ -30,7 +30,7 @@ public class DataBaseTable
         return output;
     }
 
-    public virtual object instantiateObject(string[] args)
+    public virtual object InstantiateObject(string[] args)
     {
         return this;
     }

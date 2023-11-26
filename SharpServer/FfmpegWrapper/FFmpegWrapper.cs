@@ -1,41 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Drawing;
 using System.Text;
-using NAudio.Wave;
+using FfmpegWrapper;
 using Serilog;
-using Timer = System.Timers.Timer;
 
-namespace FFMpegWrapper
+namespace SharpServer.FfmpegWrapper
 {
     public class FFmpegWrapper : IDisposable
     {
-        private static FFmpegWrapper Instance = null;
-        protected FFmpegConfig _config = null;
-        private bool _disposed = false;
+        private static readonly FFmpegWrapper Instance = new(FFmpegConfig.GetFFmpegConfig());
+        private readonly FFmpegConfig _config;
+        private bool _disposed;
         private Process _process;
 
-        //ffmpeg -i output.mp4 2>&1 | findstr Duration
         public static FFmpegWrapper GetFFmpegWrapper()
         {
-            if (Instance == null)
-            {
-                FFmpegConfig ffmpegConfig = FFmpegConfig.GetFFmpegConfig();
-
-                Instance = new FFmpegWrapper(ffmpegConfig);
-            }
-
             return Instance;
         }
 
         private FFmpegWrapper(FFmpegConfig config)
         {
             _config = config;
-            startFFmpeg();
+            StartFFmpeg();
         }
 
-        private void startFFmpeg()
+        private void StartFFmpeg()
         {
             _process = new Process();
             _process.StartInfo.UseShellExecute = _config._useShellExecute;
@@ -113,6 +102,7 @@ namespace FFMpegWrapper
                     return tmpLine.Substring(2);
                 }
             }
+
             return "Duration not found in output";
         }
 
@@ -124,7 +114,7 @@ namespace FFMpegWrapper
             return output;
         }
 
-        public async Task<string> customCommandTest(String command)
+        public async Task<string> CustomCommandTest(String command)
         {
             MemoryStream copyStream = new MemoryStream();
             //MemoryStream inputStream = new MemoryStream();
@@ -164,6 +154,7 @@ namespace FFMpegWrapper
                         headerFound = true;
                         copyStream.Write(chunkHeader, 0, 8);
                     }
+
                     byte[] chunk = new byte[4];
                     for (int j = 0; j < 4; j++)
                     {
@@ -174,8 +165,10 @@ namespace FFMpegWrapper
                             j--;
                             continue;
                         }
+
                         chunk[j] = tempBuf[0];
                     }
+
                     copyStream.Write(chunk, 0, 4);
                     if (BitConverter.IsLittleEndian)
                     {
@@ -197,6 +190,7 @@ namespace FFMpegWrapper
 
                         chunk[j] = tempBuf[0];
                     }
+
                     copyStream.Write(chunk, 0, 4);
 
                     var str = Encoding.ASCII.GetChars(chunk);
@@ -211,8 +205,10 @@ namespace FFMpegWrapper
                             j--;
                             continue;
                         }
+
                         tempByteArray[j] = tempBuf[0];
                     }
+
                     copyStream.Write(tempByteArray, 0, i + 4);
                     if (new string(str) == "IEND")
                     {
@@ -224,6 +220,7 @@ namespace FFMpegWrapper
                         headerFound = false;
                     }
                 }
+
                 _process.WaitForExit();
                 Console.WriteLine("soemthing wrong");
                 return result;
@@ -236,6 +233,7 @@ namespace FFMpegWrapper
             {
                 copyStream.Dispose();
             }
+
             _process.StartInfo.RedirectStandardError = true;
             return String.Empty;
         }

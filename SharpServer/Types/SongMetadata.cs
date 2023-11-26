@@ -1,6 +1,6 @@
-﻿namespace FFMpegWrapper.Properties;
+﻿namespace SharpServer.Types;
 
-public class MetadataSong
+public class SongMetadata
 {
     public string Name { get; }
     public string Bpm { get; }
@@ -8,10 +8,10 @@ public class MetadataSong
     public bool IsPrivate { get; }
     public string Password { get; }
 
-    public MetadataSong(string name, string bpm, string duration, bool isPrivate, string? password)
+    public SongMetadata(string name, string bpm, string duration, bool isPrivate, string password)
     {
         Name = name;
-        Bpm = Bpm;
+        Bpm = bpm;
         Duration = duration;
         IsPrivate = isPrivate;
         Password = password;

@@ -1,7 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using FFMpegWrapper;
+using SharpServer.Database;
+using SharpServer.Upload;
 
-namespace SharpServer;
+namespace SharpServer.Game;
 
 public class PlayController
 {
@@ -14,31 +15,36 @@ public class PlayController
 
     public async Task<string> Handle()
     {
-        var songId = _httpContext.Request.RouteValues["id"].ToString();
         var regex = new Regex("^[0-9]+$");
+        var songId = _httpContext.Request.RouteValues["id"]?.ToString();
+        if (songId == null)
+        {
+            _httpContext.Response.StatusCode = 400;
+            throw new Exception("No song id provided");
+        }
+
         if (!regex.IsMatch(songId))
         {
             _httpContext.Response.StatusCode = 403;
             throw new Exception("nah nah nah");
         }
 
-        var list = Database
+        var list = DatabaseClient
             .GetDatabase()
-            .Query<Song>("select * from songs where id = " + songId + ";");
+            .Query<Types.Song>("select * from songs where id = " + songId + ";");
         var path = "./bin/Mp4Files";
         var filenames = Directory.GetFiles(path);
-        var songIsOnLocalSystem = false;
-        var filenameToSearch = list[0].Songname + ".mp4";
+        var filenameToSearch = list[0].SongName + ".mp4";
         foreach (var songName in filenames)
             if (songName.Contains(filenameToSearch))
             {
                 _httpContext.Response.StatusCode = 200;
-                return list[0].Songname;
+                return list[0].SongName;
             }
 
         Console.WriteLine("start downlaoding");
-        var mp4Name = list[0].Songname + ".mp4";
-        var mp3Name = list[0].Songname + ".wav";
+        var mp4Name = list[0].SongName + ".mp4";
+        var mp3Name = list[0].SongName + ".wav";
         try
         {
             var taskMp4Download = FileServer
@@ -58,6 +64,6 @@ public class PlayController
         }
 
         _httpContext.Response.StatusCode = 200;
-        return list[0].Songname;
+        return list[0].SongName;
     }
 }

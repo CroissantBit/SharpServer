@@ -1,9 +1,11 @@
 ﻿using System.Net;
-using FFMpegWrapper.Properties;
-using Serilog;
-using Serilog.Events;
+using FfmpegWrapper;
+using SharpServer.Database;
+using SharpServer.FfmpegWrapper;
+using SharpServer.Server;
+using SharpServer.Upload;
 
-namespace FFMpegWrapper;
+namespace SharpServer;
 
 public class UploadController
 {
@@ -18,20 +20,26 @@ public class UploadController
     {
         var form = await _httpContext.Request.ReadFormAsync();
         var songName = form["songName"];
-        bool isPrivate = form["private"] == "true";
+        var isPrivate = form["private"] == "true";
         var bpm = form["bpm"];
 
+        if (songName == "" || songName == string.Empty)
+        {
+            _httpContext.Response.StatusCode = 400;
+            throw new Exception("No song name provided");
+        }
+
         if (
-            Database
+            DatabaseClient
                 .GetDatabase()
                 .CheckIfRecordExist(
                     "select * from songs where name = '?';",
-                    new String[] { songName }
+                    new string[] { songName }
                 )
         )
         {
             _httpContext.Response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
-            throw new Exception("Songname already picked");
+            throw new Exception("Song with this name already exists");
         }
 
         var file = form.Files.GetFile("file");
@@ -50,10 +58,10 @@ public class UploadController
         string password = "";
         if (isPrivate)
         {
-            if (form["password"] == "" || form["password"] == String.Empty)
+            if (form["password"] == "" || form["password"] == string.Empty)
             {
                 _httpContext.Response.StatusCode = 400;
-                throw new Exception("If you wanna make the song private, please add a password.");
+                throw new Exception("To make a song private, you need to provide a password");
             }
 
             password = form["password"];
@@ -72,23 +80,23 @@ public class UploadController
         var filePathWav = $"./bin/WavFiles/{songName}.wav";
         FFmpegWrapper.GetFFmpegWrapper().CreateWavFile(songName, filePathWav);
 
-        string mp4ObjectName = createObjectName(songName, ".mp4");
-        string wavObjectName = createObjectName(songName, ".wav");
+        string mp4ObjectName = CreateObjectName(songName, ".mp4");
+        string wavObjectName = CreateObjectName(songName, ".wav");
 
-        var taskMp4Uplaod = FileServer
+        var taskMp4Upload = FileServer
             .GetFileServer()
-            .UploadFileAsync(mp4ObjectName, filePathMp4, DataTypes.Mp4);
-        var taskWavUplaod = FileServer
+            .UploadFileAsync(mp4ObjectName, filePathMp4, "video/mp4");
+        var taskWavUpload = FileServer
             .GetFileServer()
-            .UploadFileAsync(wavObjectName, filePathWav, DataTypes.Wav);
+            .UploadFileAsync(wavObjectName, filePathWav, "audio/wav");
 
         try
         {
-            Database
+            DatabaseClient
                 .GetDatabase()
-                .Insert<Song>(
+                .Insert<Types.Song>(
                     "INSERT INTO songs (name, duration, bpm, isPrivate, password ) VALUES ('?', '?', ?, ?, '?');",
-                    new String[] { songName, duration, bpm, isPrivate.ToString(), password }
+                    new string[] { songName, duration, bpm, isPrivate.ToString(), password }
                 );
         }
         catch (Exception e)
@@ -96,10 +104,10 @@ public class UploadController
             _httpContext.Response.StatusCode = 503;
             throw new Exception("Unable to save file to database");
         }
-        Task.WaitAll(taskMp4Uplaod, taskWavUplaod);
+        Task.WaitAll(taskMp4Upload, taskWavUpload);
     }
 
-    public String createObjectName(string songName, string dataType)
+    private string CreateObjectName(string songName, string dataType)
     {
         return songName + dataType;
     }

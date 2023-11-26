@@ -1,17 +1,19 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System.Diagnostics.CodeAnalysis;
+using MySql.Data.MySqlClient;
 
-namespace FFMpegWrapper;
+namespace SharpServer.Database;
 
-public class Database
+public class DatabaseClient
 {
-    private static Database _instance;
+    [MaybeNull]
+    private static DatabaseClient _instance;
     private MySqlConnection _mySqlConnection;
 
-    public Database()
+    public DatabaseClient()
     {
-        string connectionString =
-            "Server=sql11.freesqldatabase.com;Database=sql11661704;User=sql11661704;Password=bcsu95BFXm;";
-        _mySqlConnection = new MySqlConnection(connectionString);
+        _mySqlConnection = new MySqlConnection(
+            Environment.GetEnvironmentVariable("DATABASE_CONNECTION_URL")
+        );
         try
         {
             _mySqlConnection.Open();
@@ -23,19 +25,19 @@ public class Database
         }
     }
 
-    public static Database GetDatabase()
+    public static DatabaseClient GetDatabase()
     {
-        if (_instance == null)
+        if (_instance != null)
+            return _instance;
+        try
         {
-            try
-            {
-                _instance = new Database();
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Couldnt create databse");
-            }
+            _instance = new DatabaseClient();
         }
+        catch (Exception e)
+        {
+            throw new Exception("Couldn't create the database client", e);
+        }
+
         return _instance;
     }
 
@@ -55,9 +57,10 @@ public class Database
                     {
                         row[i] = reader[i].ToString();
                     }
+
                     var element = new T();
-                    var d = element as DataBaseTable;
-                    list.Add((T)d.instantiateObject(row));
+                    var d = element as DatabaseTable;
+                    list.Add((T)d.InstantiateObject(row));
                 }
             }
         }
@@ -81,9 +84,10 @@ public class Database
                     {
                         row[i] = reader[i].ToString();
                     }
+
                     var element = new T();
-                    var d = element as DataBaseTable;
-                    list.Add((T)d.instantiateObject(row));
+                    var d = element as DatabaseTable;
+                    list.Add((T)d.InstantiateObject(row));
                 }
             }
         }
@@ -119,6 +123,7 @@ public class Database
             command = command.Insert(index, data[counter]);
             counter--;
         }
+
         return command.Replace("?", "");
     }
 }

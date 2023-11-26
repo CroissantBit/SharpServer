@@ -1,8 +1,4 @@
-﻿using System;
-using Serilog;
-using Serilog.Events;
-
-namespace FFMpegWrapper
+﻿namespace FfmpegWrapper
 {
     public class FFmpegConfig
     {

@@ -5,6 +5,7 @@
 
 # Project-specific files
 **/Generated/*.cs
+.env
 
 # User-specific files
 *.rsuser

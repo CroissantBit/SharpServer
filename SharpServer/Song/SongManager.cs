@@ -1,8 +1,7 @@
 ﻿using NAudio.Wave;
-using Serilog;
-using Timer = System.Timers.Timer;
+using SharpServer.Game;
 
-namespace SharpServer;
+namespace SharpServer.Song;
 
 public class SongManager
 {
@@ -13,25 +12,24 @@ public class SongManager
     public SongManager(string songName)
     {
         this.songName = songName;
-    }
-
-    public MusicGameLevel generateMusicGame()
-    {
-        string wavFilePath = $"./bin/WavFiles/{songName}.wav"; // Replace with your WAV file path
         list = new List<TimeSpan>();
         listFloats = new List<float>();
-        Timer aTimer;
+    }
+
+    public MusicGameLevel GenerateMusicGame()
+    {
+        var wavFilePath = $"./bin/WavFiles/{songName}.wav"; // Replace with your WAV file path
 
         using (var reader = new WaveFileReader(wavFilePath))
         {
             Console.WriteLine("Amount of Channels " + reader.WaveFormat.Channels);
-            Console.WriteLine("Samplerare : " + reader.WaveFormat.SampleRate);
+            Console.WriteLine("Sample rate : " + reader.WaveFormat.SampleRate);
             Console.WriteLine("Bits per Sample : " + reader.WaveFormat.BitsPerSample);
-            float[] floatArr = new float[2];
-            int counter = 0;
-            float avg = 0f;
-            float high = 0f;
-            TimeSpan span = new TimeSpan();
+            var floatArr = new float[2];
+            var counter = 0;
+            var avg = 0f;
+            var high = 0f;
+            var span = new TimeSpan();
             try
             {
                 while ((floatArr = reader.ReadNextSampleFrame()) != Array.Empty<float>())
@@ -65,7 +63,10 @@ public class SongManager
                     avg = 0f;
                 }
             }
-            catch (Exception e) { }
+            catch (Exception e)
+            {
+                // ignored
+            }
 
             for (int d = 0; d < list.Count; d++)
             {
@@ -75,14 +76,13 @@ public class SongManager
         }
 
         return new MusicGameLevel(list, listFloats);
-        //SetTimer();
     }
 
-    public async Task playAudio()
+    public async Task PlayAudio()
     {
-        string wavFilePath = $"./bin/WavFiles/{songName}.wav";
-        TimeSpan lastTime = new TimeSpan(0, 0, 0, 0, 0);
-        int counterr = 0;
+        var wavFilePath = $"./bin/WavFiles/{songName}.wav";
+        var lastTime = new TimeSpan(0, 0, 0, 0, 0);
+        var counter = 0;
         var waveOut = new WaveOutEvent();
         var audioFileReader = new AudioFileReader(wavFilePath);
         waveOut.Init(audioFileReader);
@@ -90,50 +90,46 @@ public class SongManager
 
         while (waveOut.PlaybackState == PlaybackState.Playing)
         {
-            //Console.WriteLine(audioFileReader.CurrentTime);
-            if (list[counterr] < audioFileReader.CurrentTime)
-            {
-                DisplayButtonToClick(listFloats[counterr]);
-                counterr++;
-            }
+            if (list[counter] >= audioFileReader.CurrentTime)
+                continue;
+            DisplayButtonToClick(listFloats[counter]);
+            counter++;
         }
-        while (counterr < listFloats.Count - 1)
+
+        while (counter < listFloats.Count - 1)
         {
             Thread.Sleep(100);
             lastTime = lastTime.Add(TimeSpan.FromMilliseconds(100));
             Console.WriteLine(lastTime);
-            if (list[counterr] < lastTime)
-            {
-                DisplayButtonToClick(listFloats[counterr]);
-                counterr++;
-                if (list[counterr] < lastTime)
-                {
-                    Console.WriteLine("need to be higher density");
-                    counterr++;
-                }
-            }
+            if (list[counter] >= lastTime)
+                continue;
+            DisplayButtonToClick(listFloats[counter]);
+            counter++;
+            if (list[counter] >= lastTime)
+                continue;
+            Console.WriteLine("need to be higher density");
+            counter++;
         }
     }
 
-    void DisplayButtonToClick(float value)
+    private static void DisplayButtonToClick(float value)
     {
-        if (value < 0.2f)
+        switch (value)
         {
-            Console.WriteLine("-------------------------------------------RIGHT");
-        }
-        else if (value < 0.4f)
-        {
-            Console.WriteLine("------------------MIDDLE-----------------------------");
-        }
-        else if (value < 0.6f)
-        {
-            Console.WriteLine("LEFT------------------------------------------------");
-        }
-        else
-        {
-            Console.WriteLine(
-                "--------------------------------------------------------------------------------TOP"
-            );
+            case < 0.2f:
+                Console.WriteLine("-------------------------------------------RIGHT");
+                break;
+            case < 0.4f:
+                Console.WriteLine("------------------MIDDLE-----------------------------");
+                break;
+            case < 0.6f:
+                Console.WriteLine("LEFT------------------------------------------------");
+                break;
+            default:
+                Console.WriteLine(
+                    "--------------------------------------------------------------------------------TOP"
+                );
+                break;
         }
     }
 }
