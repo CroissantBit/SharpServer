@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf;
 
-namespace SharpServer.Generated.Message;
+namespace SharpServer.Message;
 
 public static class MessageRegistry
 {
@@ -28,6 +28,10 @@ public static class MessageRegistry
             { 13, new Croissantbit.DeviceInfoRequest() },
             { 14, new Croissantbit.DeviceInfoListRequest() },
             { 15, new Croissantbit.DeviceInfoResponse() },
+            { 16, new Croissantbit.PlayerPlayRequest() },
+            { 17, new Croissantbit.PlayerStopRequest() },
+            { 18, new Croissantbit.PlayerRequestResponse() },
+            { 19, new Croissantbit.PlayerStateUpdate() }
         };
 
     private static readonly Dictionary<IMessage, int> MessageId =
@@ -48,6 +52,10 @@ public static class MessageRegistry
             { new Croissantbit.DeviceInfoRequest(), 13 },
             { new Croissantbit.DeviceInfoListRequest(), 14 },
             { new Croissantbit.DeviceInfoResponse(), 15 },
+            { new Croissantbit.PlayerPlayRequest(), 16 },
+            { new Croissantbit.PlayerStopRequest(), 17 },
+            { new Croissantbit.PlayerRequestResponse(), 18 },
+            { new Croissantbit.PlayerStateUpdate(), 19 }
         };
 
     public static int GetIdByMessage(IMessage msg)
