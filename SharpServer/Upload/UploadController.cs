@@ -1,11 +1,8 @@
 ﻿using System.Net;
-using FfmpegWrapper;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
-using SharpServer.Server;
-using SharpServer.Upload;
 
-namespace SharpServer;
+namespace SharpServer.Upload;
 
 public class UploadController
 {

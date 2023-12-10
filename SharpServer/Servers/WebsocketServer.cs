@@ -3,7 +3,7 @@ using vtortola.WebSockets;
 using vtortola.WebSockets.Deflate;
 using vtortola.WebSockets.Rfc6455;
 
-namespace SharpServer.Server;
+namespace SharpServer.Servers;
 
 public class WebsocketServer
 {

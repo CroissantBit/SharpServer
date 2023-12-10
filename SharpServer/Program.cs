@@ -5,8 +5,10 @@ using SharpServer;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 using SharpServer.Game;
+using SharpServer.Servers;
 using SharpServer.Song;
 using SharpServer.Types;
+using SharpServer.Upload;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -121,7 +123,6 @@ app.MapGet(
                 );
 
             Task.WaitAll(c, o);
-
             await context.Response.WriteAsync("Song found");
         }
         catch (Exception e)
@@ -131,4 +132,6 @@ app.MapGet(
     }
 );
 
+Log.Information("Starting server...");
+var server = new SerialServer();
 app.Run();

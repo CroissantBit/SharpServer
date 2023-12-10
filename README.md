@@ -11,7 +11,7 @@ Common flags:
 - ...
 
 ```bash
-# 1. Setup environment variables
+# Setup environment variables
 cp .env.example .env
 # Edit .env using your preferred text editor
 nano .env
