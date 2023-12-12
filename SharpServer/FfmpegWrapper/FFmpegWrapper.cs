@@ -139,6 +139,7 @@ namespace SharpServer.FfmpegWrapper
                         byte[] chunkHeader = new byte[8];
                         for (int j = 0; j < 8; j++)
                         {
+                        //take the tempBuf outside
                             byte[] tempBuf = new byte[1];
                             int x = inputStream.Read(tempBuf, 0, 1);
                             if (x == 0)
@@ -158,6 +159,7 @@ namespace SharpServer.FfmpegWrapper
                     byte[] chunk = new byte[4];
                     for (int j = 0; j < 4; j++)
                     {
+                    //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         if (x == 0)
@@ -180,6 +182,7 @@ namespace SharpServer.FfmpegWrapper
                     chunk = new byte[4];
                     for (int j = 0; j < 4; j++)
                     {
+                    //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         if (x == 0)
@@ -198,6 +201,8 @@ namespace SharpServer.FfmpegWrapper
                     byte[] tempByteArray = new byte[i + 4];
                     for (int j = 0; j < i + 4; j++)
                     {
+                     //!change
+                    //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         if (x == 0)
@@ -252,6 +257,8 @@ namespace SharpServer.FfmpegWrapper
         {
             int pixelInterval = 8;
             double brightnessMultiplier = 1;
+            //!change
+            //use first bitmap dont make a new one
             using (Bitmap bmp = bitmap)
             {
                 string WrittenLine = "";
@@ -278,6 +285,8 @@ namespace SharpServer.FfmpegWrapper
             }
 
             var cv = 0;
+            //!change
+            //var cv = watch.ElapsedMilliseconds > 42 ? 0 : Convert.ToInt32(42 - watch.ElapsedMilliseconds);
             if (watch.ElapsedMilliseconds > 42)
             {
                 cv = 0;
