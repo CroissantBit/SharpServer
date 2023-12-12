@@ -39,7 +39,7 @@ public abstract class Client
 
     protected void HandleMessage(IMessage msg)
     {
-        Console.WriteLine($"Received message {msg}");
+        Log.Debug($"Received message {msg} with type {msg.Descriptor.Name}");
         switch (msg)
         {
             case Ping:
@@ -64,6 +64,7 @@ public abstract class Client
 
     private void RefreshKeepAliveState(object? state)
     {
+        Log.Debug("Refreshing keepalive state");
         if (_keepAliveProbesLeft == 0)
         {
             DisposeConnection();

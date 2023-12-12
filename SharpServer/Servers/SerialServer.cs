@@ -9,28 +9,35 @@ public class SerialServer : Server
 {
     private readonly Timer _timer;
 
-    public SerialServer()
+    public SerialServer(CancellationToken ctx)
+        : base(ctx)
     {
+        Log.Information("Starting serial server...");
         _timer = new Timer(ScanForClients, null, 0, Env.GetInt("SERIAL_SCAN_INTERVAL", 8000));
     }
 
-    private async void ScanForClients(object? state)
+    private void ScanForClients(object? state)
     {
-        Log.Information("Scanning for serial clients...");
-        var serialClients = _connectedClients
+        Log.Debug("Scanning for serial clients...");
+        var serialClients = ConnectedClients
             .Values
             .OfType<SerialClient>()
-            .Concat(_limboClients.Values.OfType<SerialClient>());
+            .Concat(LimboClients.Values.OfType<SerialClient>());
         var serialPorts = SerialPort
             .GetPortNames()
             .Where(port => serialClients.All(client => client.Port.PortName != port))
             .ToArray();
-        Log.Information($"Trying to connect to {serialPorts.Length} serial ports");
+        Log.Debug($"Trying to connect to {serialPorts.Length} serial ports");
         foreach (var port in serialPorts)
         {
             try
             {
                 var serialPort = new SerialPort(port, Env.GetInt("SERIAL_BAUD_RATE", 115200));
+                serialPort.Handshake = Handshake.None;
+                serialPort.Parity = Parity.None;
+                serialPort.StopBits = StopBits.One;
+                serialPort.DataBits = 8;
+
                 var client = new SerialClient(serialPort);
                 InitializeClient(client);
             }

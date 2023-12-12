@@ -4,11 +4,11 @@ using SharpServer.Upload;
 
 namespace SharpServer.Game;
 
-public class PlayController
+public class PlayManager
 {
     private readonly HttpContext _httpContext;
 
-    public PlayController(HttpContext context)
+    public PlayManager(HttpContext context)
     {
         _httpContext = context;
     }
@@ -42,7 +42,7 @@ public class PlayController
                 return list[0].SongName;
             }
 
-        Console.WriteLine("start downlaoding");
+        Console.WriteLine("Starting download");
         var mp4Name = list[0].SongName + ".mp4";
         var mp3Name = list[0].SongName + ".wav";
         try
@@ -60,7 +60,7 @@ public class PlayController
         {
             Console.WriteLine(e.Message);
             _httpContext.Response.StatusCode = 503;
-            throw new Exception("Unable to downlaod files");
+            throw new Exception("Unable to download files");
         }
 
         _httpContext.Response.StatusCode = 200;
