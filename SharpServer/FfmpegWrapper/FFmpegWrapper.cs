@@ -205,6 +205,8 @@ namespace SharpServer.FfmpegWrapper
                     //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
+                        //!change
+                        //chnage to single line with else block
                         if (x == 0)
                         {
                             j--;
