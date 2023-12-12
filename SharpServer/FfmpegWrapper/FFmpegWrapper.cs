@@ -139,7 +139,7 @@ namespace SharpServer.FfmpegWrapper
                         byte[] chunkHeader = new byte[8];
                         for (int j = 0; j < 8; j++)
                         {
-                        //take the tempBuf outside
+                            //take the tempBuf outside
                             byte[] tempBuf = new byte[1];
                             int x = inputStream.Read(tempBuf, 0, 1);
                             if (x == 0)
@@ -159,7 +159,7 @@ namespace SharpServer.FfmpegWrapper
                     byte[] chunk = new byte[4];
                     for (int j = 0; j < 4; j++)
                     {
-                    //take the tempBuf outside
+                        //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         if (x == 0)
@@ -182,7 +182,7 @@ namespace SharpServer.FfmpegWrapper
                     chunk = new byte[4];
                     for (int j = 0; j < 4; j++)
                     {
-                    //take the tempBuf outside
+                        //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         if (x == 0)
@@ -201,8 +201,8 @@ namespace SharpServer.FfmpegWrapper
                     byte[] tempByteArray = new byte[i + 4];
                     for (int j = 0; j < i + 4; j++)
                     {
-                     //!change
-                    //take the tempBuf outside
+                        //!change
+                        //take the tempBuf outside
                         byte[] tempBuf = new byte[1];
                         int x = inputStream.Read(tempBuf, 0, 1);
                         //!change

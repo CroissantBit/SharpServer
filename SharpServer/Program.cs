@@ -1,7 +1,6 @@
 using System.Reflection;
 using FfmpegWrapper;
 using Serilog;
-using SharpServer;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 using SharpServer.Game;
@@ -133,5 +132,7 @@ app.MapGet(
 );
 
 Log.Information("Starting server...");
+// TODO
+// Init the game manager here (with cancel token), which in return starts the server(s)
 var server = new SerialServer();
 app.Run();

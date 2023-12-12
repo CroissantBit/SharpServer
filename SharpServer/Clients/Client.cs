@@ -17,8 +17,8 @@ public abstract class Client
     private readonly Timer _keepAliveTimer;
     private int _keepAliveProbesLeft = KeepAliveProbesLeftDefault;
 
-    protected abstract void Send(IMessage message);
-    protected abstract void SendRaw(byte[] message);
+    public abstract void Send(IMessage message);
+    public abstract void SendRaw(byte[] message);
     protected abstract void DisposeConnection();
 
     protected Client()

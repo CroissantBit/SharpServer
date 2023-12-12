@@ -1,4 +1,5 @@
-﻿using SharpServer.Clients;
+﻿using Google.Protobuf;
+using SharpServer.Clients;
 
 namespace SharpServer.Servers;
 
@@ -24,6 +25,29 @@ public abstract class Server : IMessageHandler, IDisposable
     private void RemoveClient(Client client)
     {
         _connectedClients.Remove(client.Id);
+    }
+
+    /// <summary>
+    /// Sends a message to all connected clients
+    /// </summary>
+    /// <param name="message">A Protobuffer message</param>
+    public void SendAll(IMessage message)
+    {
+        foreach (var client in _connectedClients)
+        {
+            client.Value.Send(message);
+        }
+    }
+    /// <summary>
+    /// Sends raw bytes to all connected clients
+    /// </summary>
+    /// <param name="bytes">Array of bytes</param>
+    public void SendRawAll(byte[] bytes)
+    {
+        foreach (var client in _connectedClients)
+        {
+            client.Value.SendRaw(bytes);
+        }
     }
 
     public virtual void Dispose()

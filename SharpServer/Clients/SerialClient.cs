@@ -12,58 +12,61 @@ namespace SharpServer.Clients;
 public class SerialClient : Client
 {
     public SerialPort Port { get; }
+    private readonly COBSWriterStream outputStream;
     private readonly List<byte> _buffer = new();
+
 
     public SerialClient(SerialPort port)
     {
         Port = port;
+        outputStream = new COBSWriterStream(Port.BaseStream);
         Port.DataReceived += HandleDataReceived;
         Port.Open();
     }
 
+    /// <summary>
+    /// Callback to check if the buffer contains a COBS encoded message
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private async void HandleDataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        Console.WriteLine("Data received");
+        // TODO consider using a stream
+        // ex: Port.BaseStream.ReadCOBSMessages();
         while (Port.BytesToRead > 0)
         {
             var data = (byte)Port.ReadByte();
+            _buffer.Add(data);
             if (data == 0x00)
             {
-                Console.WriteLine("Found 00 byte");
-                // Found a 00 byte, decode the message and handle it
+                // End of packet has been reached
                 var reader = PipeReader.Create(new ReadOnlySequence<byte>(_buffer.ToArray()));
                 await foreach (var msgByte in reader.ReadCOBSMessages())
                 {
-                    var msgId = MemoryMarshal.Read<int>(msgByte.Span);
+                    var msgId = MemoryMarshal.Read<short>(msgByte.Span[..sizeof(short)]);
                     var msg = MessageRegistry.GetMessageById(msgId);
-                    msg.MergeFrom(msgByte[sizeof(int)..].ToArray());
+                    msg.MergeFrom(msgByte.Span[sizeof(short)..]);
                     HandleMessage(msg);
                 }
                 _buffer.Clear();
             }
-            else
-            {
-                _buffer.Add(data);
-            }
         }
     }
 
-    protected override void Send(IMessage message)
+    public override void Send(IMessage message)
     {
         if (!Port.IsOpen)
-            throw new Exception("Port is not open");
-        var msgId = MessageRegistry.GetIdByMessage(message);
-        var bytes = message.ToByteArray();
-        // TODO: encode with COBS
+            throw new Exception($"Failed to send message to {Port.PortName} as its not open!");
+        var msgId = BitConverter.GetBytes(MessageRegistry.GetIdByMessage(message));
+      
+        outputStream.Write(msgId);
+        message.WriteTo(outputStream);
+        outputStream.CommitMessage();
 
-        var msg = new byte[bytes.Length + 1];
-        msg[0] = (byte)msgId;
-        bytes.CopyTo(msg, 1);
-
-        Port.Write(msg, 0, msg.Length);
+        outputStream.Dispose();
     }
 
-    protected override void SendRaw(byte[] message)
+    public override void SendRaw(byte[] message)
     {
         Port.Write(message, 0, message.Length);
     }

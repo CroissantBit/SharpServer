@@ -10,7 +10,7 @@ public static class MessageRegistry
      * This will also hopefully hint at the compiler to append messages at compile time
      * 2 List are used to allow faster lookups with the downside of requiring more memory
      */
-    private static readonly Dictionary<int, IMessage> IdMessage =
+    private static readonly Dictionary<short, IMessage> IdMessage =
         new()
         {
             { 1, new Croissantbit.Ping() },
@@ -34,7 +34,7 @@ public static class MessageRegistry
             { 19, new Croissantbit.PlayerStateUpdate() }
         };
 
-    private static readonly Dictionary<IMessage, int> MessageId =
+    private static readonly Dictionary<IMessage, short> MessageId =
         new()
         {
             { new Croissantbit.Ping(), 1 },
@@ -58,12 +58,12 @@ public static class MessageRegistry
             { new Croissantbit.PlayerStateUpdate(), 19 }
         };
 
-    public static int GetIdByMessage(IMessage msg)
+    public static short GetIdByMessage(IMessage msg)
     {
         return MessageId[msg];
     }
 
-    public static IMessage GetMessageById(int id)
+    public static IMessage GetMessageById(short id)
     {
         return IdMessage[id];
     }
