@@ -112,6 +112,8 @@ public class HttpServer
 
                     var songManager = new SongManager(songName);
                     var o = songManager.PlayAudio();
+                    //!important
+                    //add -framerate to define the specific framerate
                     Task c = FFmpegWrapper
                         .GetFFmpegWrapper()
                         .CustomCommandTest(
