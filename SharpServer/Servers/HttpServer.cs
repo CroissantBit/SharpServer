@@ -1,4 +1,6 @@
+using Google.Protobuf;
 using Serilog;
+using SharpServer.Clients;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 using SharpServer.Game;
@@ -9,6 +11,7 @@ namespace SharpServer.Servers;
 
 public class HttpServer
 {
+    public event Action<IMessage, Client> OnMessageUpperManager;
     private readonly WebApplication _app;
 
     public HttpServer(CancellationToken ctx)
@@ -67,7 +70,7 @@ public class HttpServer
             async (context) =>
             {
                 var json = "";
-                var list = DatabaseClient.GetDatabase().Query<Types.Song>("SELECT * from songs;");
+                var list = DatabaseClient.GetDatabase().Query<Types.Video>("SELECT * from songs;");
                 json += "[\n";
                 var firstLine = true;
                 foreach (var row in list)
@@ -94,34 +97,25 @@ public class HttpServer
 
         _app.MapGet(
             "/play/{id}",
-            async (context) =>
+            async (HttpContext context, string id) =>
             {
                 try
                 {
-                    var playManager = new PlayManager(context);
-                    string songName;
-                    try
-                    {
-                        songName = await playManager.Handle();
-                    }
-                    catch (Exception e)
-                    {
-                        await context.Response.WriteAsync(e.Message);
-                        return;
-                    }
+                    var videoId = Convert.ToInt32(id);
+                    var video = VideoManager.GetVideo(videoId);
+                    var songManager = new SongManager(video.Name);
 
-                    var songManager = new SongManager(songName);
                     var o = songManager.PlayAudio();
                     //!important
                     //add -framerate to define the specific framerate
                     Task c = FFmpegWrapper
                         .GetFFmpegWrapper()
                         .CustomCommandTest(
-                            $" -i  ./bin/Mp4Files/{songName}.mp4 -s 140x80 -pix_fmt rgba -f image2pipe -vcodec png -"
+                            $" -i  ./bin/Mp4Files/{video.Name}.mp4 -s 140x80 -pix_fmt rgba -f image2pipe -vcodec png -"
                         );
 
                     Task.WaitAll(c, o);
-                    await context.Response.WriteAsync("Song found");
+                    await context.Response.WriteAsync("Found video with name " + video.Name);
                 }
                 catch (Exception e)
                 {

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using MySql.Data.MySqlClient;
+using Serilog;
 
 namespace SharpServer.Database;
 
@@ -7,7 +8,7 @@ public class DatabaseClient
 {
     [MaybeNull]
     private static DatabaseClient _instance;
-    private MySqlConnection _mySqlConnection;
+    private readonly MySqlConnection _mySqlConnection;
 
     public DatabaseClient()
     {
@@ -17,11 +18,11 @@ public class DatabaseClient
         try
         {
             _mySqlConnection.Open();
-            Console.WriteLine("worked");
+            Log.Information("Connected to database");
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            throw new Exception("Couldn't connect to the database", e);
         }
     }
 
@@ -44,16 +45,16 @@ public class DatabaseClient
     public List<T> Query<T>(string command)
         where T : new()
     {
-        List<T> list = new List<T>();
+        var list = new List<T>();
 
-        using (MySqlCommand cmd = new MySqlCommand(command, _mySqlConnection))
+        using (var cmd = new MySqlCommand(command, _mySqlConnection))
         {
-            using (MySqlDataReader reader = cmd.ExecuteReader())
+            using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    string[] row = new string[reader.FieldCount];
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    var row = new string[reader.FieldCount];
+                    for (var i = 0; i < reader.FieldCount; i++)
                     {
                         row[i] = reader[i].ToString();
                     }
@@ -71,16 +72,16 @@ public class DatabaseClient
     public List<T> Insert<T>(string command, String[] data)
         where T : new()
     {
-        List<T> list = new List<T>();
+        var list = new List<T>();
         command = fillCommandStr(command, data);
-        using (MySqlCommand cmd = new MySqlCommand(command, _mySqlConnection))
+        using (var cmd = new MySqlCommand(command, _mySqlConnection))
         {
-            using (MySqlDataReader reader = cmd.ExecuteReader())
+            using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
-                    string[] row = new string[reader.FieldCount];
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    var row = new string[reader.FieldCount];
+                    for (var i = 0; i < reader.FieldCount; i++)
                     {
                         row[i] = reader[i].ToString();
                     }
@@ -95,12 +96,12 @@ public class DatabaseClient
         return list;
     }
 
-    public bool CheckIfRecordExist(String command, String[] data)
+    public bool CheckIfRecordExist(string command, string[] data)
     {
         command = fillCommandStr(command, data);
-        using (MySqlCommand cmd = new MySqlCommand(command, _mySqlConnection))
+        using (var cmd = new MySqlCommand(command, _mySqlConnection))
         {
-            using (MySqlDataReader reader = cmd.ExecuteReader())
+            using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
                 {
@@ -112,11 +113,11 @@ public class DatabaseClient
         return false;
     }
 
-    private string fillCommandStr(String command, String[] data)
+    private string fillCommandStr(string command, IReadOnlyList<string> data)
     {
-        int counter = data.Length - 1;
-        int index = command.Length - 1;
-        while (command.Contains("?") && counter >= 0)
+        var counter = data.Count - 1;
+        var index = command.Length - 1;
+        while (command.Contains('?') && counter >= 0)
         {
             index = command.LastIndexOf('?');
             command = command.Remove(index, 1);

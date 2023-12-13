@@ -1,24 +1,31 @@
-﻿using Google.Protobuf;
+﻿using Croissantbit;
+using Google.Protobuf;
 using SharpServer.Clients;
+using SharpServer.Message;
 
 namespace SharpServer.Servers;
 
 public abstract class Server : IMessageHandler, IDisposable
 {
+    public event Action<IMessage, Client>? OnMessageUpperManager;
+    private readonly CancellationToken _cancellationToken;
     protected readonly Dictionary<int, Client> ConnectedClients = new();
     protected readonly Dictionary<int, Client> LimboClients = new();
 
-    public Server(CancellationToken cancellationToken) { }
+    protected Server(CancellationToken cancellationToken)
+    {
+        _cancellationToken = cancellationToken;
+    }
 
     protected void InitializeClient(Client client)
     {
         client.OnTimeout += RemoveClient;
-        client.OnConnected += AddClient;
+        client.OnMessageUpperServer += HandleMessage;
 
         LimboClients.Add(client.Id, client);
     }
 
-    private void AddClient(Client client)
+    public void AddClient(Client client)
     {
         LimboClients.Remove(client.Id);
         ConnectedClients.Add(client.Id, client);
@@ -58,5 +65,25 @@ public abstract class Server : IMessageHandler, IDisposable
         foreach (var client in ConnectedClients)
             client.Value.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    public void HandleMessage(IMessage msg, Client? client = null)
+    {
+        if (client == null)
+            throw new ArgumentNullException(nameof(client));
+        switch (msg)
+        {
+            case VideoMetadataRequest:
+
+                break;
+
+            case VideoMetadataListRequest:
+
+                break;
+
+            default:
+                OnMessageUpperManager?.Invoke(msg, client);
+                break;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.IO.Ports;
 using DotNetEnv;
+using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
 

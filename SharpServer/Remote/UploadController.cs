@@ -91,7 +91,7 @@ public class UploadController
         {
             DatabaseClient
                 .GetDatabase()
-                .Insert<Types.Song>(
+                .Insert<Types.Video>(
                     "INSERT INTO songs (name, duration, bpm, isPrivate, password ) VALUES ('?', '?', ?, ?, '?');",
                     new string[] { songName, duration, bpm, isPrivate.ToString(), password }
                 );

@@ -5,20 +5,20 @@ namespace SharpServer.Song;
 
 public class SongManager
 {
-    private List<TimeSpan> list;
-    private List<float> listFloats;
-    private string songName;
+    private readonly List<TimeSpan> _list;
+    private readonly List<float> _listFloats;
+    private readonly string _songName;
 
     public SongManager(string songName)
     {
-        this.songName = songName;
-        list = new List<TimeSpan>();
-        listFloats = new List<float>();
+        this._songName = songName;
+        _list = new List<TimeSpan>();
+        _listFloats = new List<float>();
     }
 
     public MusicGameLevel GenerateMusicGame()
     {
-        var wavFilePath = $"./bin/WavFiles/{songName}.wav"; // Replace with your WAV file path
+        var wavFilePath = $"./bin/WavFiles/{_songName}.wav"; // Replace with your WAV file path
 
         using (var reader = new WaveFileReader(wavFilePath))
         {
@@ -55,8 +55,8 @@ public class SongManager
                     avg /= (48000 * 2);
                     Console.WriteLine("avg : " + avg.ToString("C"));
                     Console.WriteLine(reader.CurrentTime);
-                    list.Add(span);
-                    listFloats.Add(high);
+                    _list.Add(span);
+                    _listFloats.Add(high);
                     high = 0f;
                     span = new TimeSpan();
                     Console.WriteLine("-----------------------------------");
@@ -68,19 +68,19 @@ public class SongManager
                 // ignored
             }
 
-            for (int d = 0; d < list.Count; d++)
+            for (int d = 0; d < _list.Count; d++)
             {
-                Console.WriteLine("time : " + list[d]);
-                Console.WriteLine("floatvalue : " + listFloats[d].ToString("C"));
+                Console.WriteLine("time : " + _list[d]);
+                Console.WriteLine("floatvalue : " + _listFloats[d].ToString("C"));
             }
         }
 
-        return new MusicGameLevel(list, listFloats);
+        return new MusicGameLevel(_list, _listFloats);
     }
 
     public async Task PlayAudio()
     {
-        var wavFilePath = $"./bin/WavFiles/{songName}.wav";
+        var wavFilePath = $"./bin/WavFiles/{_songName}.wav";
         var lastTime = new TimeSpan(0, 0, 0, 0, 0);
         var counter = 0;
         var waveOut = new WaveOutEvent();
@@ -90,22 +90,22 @@ public class SongManager
 
         while (waveOut.PlaybackState == PlaybackState.Playing)
         {
-            if (list[counter] >= audioFileReader.CurrentTime)
+            if (_list[counter] >= audioFileReader.CurrentTime)
                 continue;
-            DisplayButtonToClick(listFloats[counter]);
+            DisplayButtonToClick(_listFloats[counter]);
             counter++;
         }
 
-        while (counter < listFloats.Count - 1)
+        while (counter < _listFloats.Count - 1)
         {
             Thread.Sleep(100);
             lastTime = lastTime.Add(TimeSpan.FromMilliseconds(100));
             Console.WriteLine(lastTime);
-            if (list[counter] >= lastTime)
+            if (_list[counter] >= lastTime)
                 continue;
-            DisplayButtonToClick(listFloats[counter]);
+            DisplayButtonToClick(_listFloats[counter]);
             counter++;
-            if (list[counter] >= lastTime)
+            if (_list[counter] >= lastTime)
                 continue;
             Console.WriteLine("need to be higher density");
             counter++;

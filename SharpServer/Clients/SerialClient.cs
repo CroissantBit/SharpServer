@@ -1,5 +1,4 @@
-﻿using System;
-using System.Buffers;
+﻿using System.Buffers;
 using System.IO.Pipelines;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
@@ -14,7 +13,6 @@ namespace SharpServer.Clients;
 public class SerialClient : Client
 {
     public SerialPort Port { get; }
-    private readonly COBSWriterBuffer _outputStream;
     private readonly List<byte> _buffer = new();
 
     public SerialClient(SerialPort port)
@@ -22,12 +20,10 @@ public class SerialClient : Client
         Port = port;
         Port.DataReceived += HandleDataReceived;
         Port.Open();
-
-        _outputStream = new COBSWriterBuffer(Port.BaseStream);
     }
 
     /// <summary>
-    /// Callback to check if the buffer contains a COBS encoded message
+    /// Callback to check if the buffer contains a COBS encoded message and if so, decode it and pass it to the message handlers
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
@@ -69,24 +65,43 @@ public class SerialClient : Client
         }
     }
 
-    public override void Send(IMessage message)
+    private static void CopyToPipe(COBSWriterBuffer pipe, byte[] bytes)
+    {
+        var span = pipe.GetSpan(bytes.Length);
+        bytes.CopyTo(span);
+        pipe.Advance(bytes.Length);
+    }
+
+    public override void Send(IMessage msg)
     {
         if (!Port.IsOpen)
             throw new Exception($"Failed to send message to {Port.PortName} as its not open!");
 
-        // SendRaw(new byte[] { 0x02, 0x01, 0x01, 0x00 });
-        var msgId = BitConverter.GetBytes(MessageRegistry.GetIdByMessage(message));
+        var msgId = BitConverter.GetBytes(MessageRegistry.GetIdByMessage(msg));
+        var pipe = new Pipe();
+        var cobsPipe = new COBSWriterBuffer(pipe.Writer);
 
-        _outputStream.Write(msgId);
-        if (message.CalculateSize() > 0)
-            message.WriteTo(_outputStream);
-        _outputStream.CommitMessage();
-        Port.BaseStream.Flush();
+        // Encode Message
+        CopyToPipe(cobsPipe, msgId);
+
+        // Special case for Ping and Pong messages as they don't have any data
+        if (msg.Descriptor.GetType() != typeof(Ping) || msg.Descriptor.GetType() != typeof(Pong))
+            CopyToPipe(cobsPipe, msg.ToByteArray());
+
+        cobsPipe.CommitMessage();
+        pipe.Writer.Complete();
+
+        // Send Message
+        // This feels horrible btw
+        var outStream = new MemoryStream();
+        pipe.Reader.CopyToAsync(outStream);
+        SendRaw(outStream.ToArray());
+        Console.WriteLine(BitConverter.ToString(outStream.ToArray()));
     }
 
-    public override void SendRaw(byte[] message)
+    public override void SendRaw(byte[] msg)
     {
-        Port.Write(message, 0, message.Length);
+        Port.Write(msg, 0, msg.Length);
     }
 
     protected override void DisposeConnection()

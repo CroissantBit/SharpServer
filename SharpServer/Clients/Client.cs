@@ -2,23 +2,23 @@
 using DotNetEnv;
 using Google.Protobuf;
 using Serilog;
-using static SharpServer.Util;
+using SharpServer.Message;
 
 namespace SharpServer.Clients;
 
-public abstract class Client
+public abstract class Client : IMessageHandler
 {
     private static readonly int KeepAliveProbesLeftDefault = Env.GetInt("KEEPALIVE_PROBES", 5);
 
     public event Action<Client>? OnTimeout;
-    public event Action<Client>? OnConnected;
-    public int Id { get; } = GenerateClientId();
+    public event Action<IMessage, Client>? OnMessageUpperServer;
+    public int Id { get; } = Util.GenerateClientId();
 
     private readonly Timer _keepAliveTimer;
     private int _keepAliveProbesLeft = KeepAliveProbesLeftDefault;
 
-    public abstract void Send(IMessage message);
-    public abstract void SendRaw(byte[] message);
+    public abstract void Send(IMessage msg);
+    public abstract void SendRaw(byte[] msg);
     protected abstract void DisposeConnection();
 
     protected Client()
@@ -26,8 +26,8 @@ public abstract class Client
         _keepAliveTimer = new Timer(
             RefreshKeepAliveState,
             null,
-            TimeSpan.FromSeconds(Env.GetInt("KEEPALIVE_INTERVAL", 5000)),
-            TimeSpan.FromSeconds(Env.GetInt("KEEPALIVE_INTERVAL", 5000))
+            TimeSpan.FromMilliseconds(Env.GetInt("KEEPALIVE_INTERVAL", 8000)),
+            TimeSpan.FromMilliseconds(Env.GetInt("KEEPALIVE_INTERVAL", 8000))
         );
     }
 
@@ -37,7 +37,7 @@ public abstract class Client
         DisposeConnection();
     }
 
-    protected void HandleMessage(IMessage msg)
+    public void HandleMessage(IMessage msg, Client? client = null)
     {
         Log.Debug($"Received message {msg} with type {msg.Descriptor.Name}");
         switch (msg)
@@ -50,14 +50,8 @@ public abstract class Client
                 _keepAliveProbesLeft = KeepAliveProbesLeftDefault;
                 break;
 
-            case RegisterClientRequest:
-                OnConnected?.Invoke(this);
-                var response = new RegisterClientResponse
-                {
-                    ClientId = Id,
-                    State = PlayerState.Idle
-                };
-                Send(response);
+            default:
+                OnMessageUpperServer?.Invoke(msg, this);
                 break;
         }
     }
