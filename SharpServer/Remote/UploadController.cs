@@ -2,7 +2,7 @@
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 
-namespace SharpServer.Upload;
+namespace SharpServer.Remote;
 
 public class UploadController
 {

@@ -1,7 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 
-namespace SharpServer.Upload;
+namespace SharpServer.Remote;
 
 public class FileServer
 {
