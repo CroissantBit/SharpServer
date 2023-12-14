@@ -3,6 +3,7 @@ using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
 using SharpServer.Database;
+using SharpServer.FfmpegWrapper;
 using SharpServer.Message;
 using SharpServer.Servers;
 
@@ -38,6 +39,37 @@ public class GameManager : IMessageHandler
         if (_servers.WebsocketServer)
             throw new NotImplementedException();
         return Task.CompletedTask;
+    }
+
+    public void PlayVideo(int videoId)
+    {
+        var video = VideoManager.GetVideo(videoId);
+        // TODO
+        // FFmpegWrapper.GetFFmpegWrapper().GetVideoStream(video)
+        var stream = null as Stream;
+
+        var task = Task.Run(async () =>
+        {
+            await Task.Delay(5000);
+            var playerState = new PlayerStateUpdate
+            {
+                State = _playerState,
+                VideoMetadata = video.toVideoMetadata()
+            };
+            SendToAll(playerState);
+        });
+
+        var pixels = VideoStream.ReadFrame(stream, 240, 280);
+
+        Console.WriteLine(pixels.Length);
+        foreach (var pixel in pixels)
+            Console.WriteLine(pixel);
+        Console.WriteLine("Done");
+    }
+
+    public void SendToAll(IMessage msg)
+    {
+        _serialServer?.SendAll(msg);
     }
 
     public void HandleMessage(IMessage msg, Client? client = null)
@@ -87,7 +119,7 @@ public class GameManager : IMessageHandler
                         State = _playerState,
                         VideoMetadata = video.toVideoMetadata()
                     };
-                    _serialServer?.SendAll(playerState);
+                    SendToAll(playerState);
                 }
                 catch (Exception e)
                 {
