@@ -1,5 +1,6 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Serilog;
 
 namespace SharpServer.Remote;
 
@@ -68,7 +69,7 @@ public class FileServer
         }
         catch (AmazonS3Exception ex)
         {
-            Console.WriteLine($"Error saving {objectName}: {ex.Message}");
+            Log.Error($"Error downloading {objectName}: {ex.Message}");
             return false;
         }
         finally

@@ -11,7 +11,9 @@ namespace SharpServer.Servers;
 
 public class HttpServer
 {
-    public event Action<IMessage, Client> OnMessageUpperManager;
+#pragma warning disable CS0067 // Event is never used
+    public event Action<IMessage, Client> OnMessageUpperManager = null!;
+#pragma warning restore CS0067 // Event is never used
     private readonly WebApplication _app;
 
     public HttpServer(CancellationToken ctx)
@@ -103,9 +105,9 @@ public class HttpServer
                 {
                     var videoId = Convert.ToInt32(id);
                     var video = VideoManager.GetVideo(videoId);
-                    var songManager = new SongManager(video.Name);
+                    var songManager = new AudioManager(video.Name);
 
-                    var o = songManager.PlayAudio();
+                    var o = songManager.Play();
                     //!important
                     //add -framerate to define the specific framerate
                     Task c = FFmpegWrapper

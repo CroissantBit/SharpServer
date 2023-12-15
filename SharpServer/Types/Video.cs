@@ -35,13 +35,13 @@ public class Video : DatabaseTable
         return new Video(id, songName, duration, bpm, isPrivate, password);
     }
 
-    public VideoMetadata toVideoMetadata()
+    public VideoMetadata ToVideoMetadata()
     {
         return new VideoMetadata
         {
             Bitrate = 0,
             Bpm = Bpm,
-            Duration = int.Parse(Duration),
+            Duration = 0,
             Id = Id,
             Processing = false,
             Size = 0,

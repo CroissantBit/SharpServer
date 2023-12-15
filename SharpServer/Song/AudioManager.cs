@@ -1,24 +1,34 @@
-﻿using NAudio.Wave;
+﻿using DotNetEnv;
+using NAudio.Wave;
+using Serilog;
 using SharpServer.Game;
 
 namespace SharpServer.Song;
 
-public class SongManager
+public class AudioManager
 {
     private readonly List<TimeSpan> _list;
     private readonly List<float> _listFloats;
-    private readonly string _songName;
+    private readonly string _videoName;
 
-    public SongManager(string songName)
+    public delegate void SignalUpdateCallback(float value);
+
+    private readonly SignalUpdateCallback _signalUpdateCallback;
+
+    public AudioManager(string videoName, SignalUpdateCallback? signalUpdateCallback = null)
     {
-        this._songName = songName;
+        _videoName = videoName;
         _list = new List<TimeSpan>();
         _listFloats = new List<float>();
+        _signalUpdateCallback = DisplaySignalToConsole;
+
+        if (signalUpdateCallback != null)
+            _signalUpdateCallback = signalUpdateCallback;
     }
 
     public MusicGameLevel GenerateMusicGame()
     {
-        var wavFilePath = $"./bin/WavFiles/{_songName}.wav"; // Replace with your WAV file path
+        var wavFilePath = $"./bin/WavFiles/{_videoName}.wav"; // Replace with your WAV file path
 
         using (var reader = new WaveFileReader(wavFilePath))
         {
@@ -78,9 +88,9 @@ public class SongManager
         return new MusicGameLevel(_list, _listFloats);
     }
 
-    public async Task PlayAudio()
+    public Task Play()
     {
-        var wavFilePath = $"./bin/WavFiles/{_songName}.wav";
+        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/WavFiles/{_videoName}.wav";
         var lastTime = new TimeSpan(0, 0, 0, 0, 0);
         var counter = 0;
         var waveOut = new WaveOutEvent();
@@ -92,7 +102,7 @@ public class SongManager
         {
             if (_list[counter] >= audioFileReader.CurrentTime)
                 continue;
-            DisplayButtonToClick(_listFloats[counter]);
+            _signalUpdateCallback.Invoke(_listFloats[counter]);
             counter++;
         }
 
@@ -100,19 +110,20 @@ public class SongManager
         {
             Thread.Sleep(100);
             lastTime = lastTime.Add(TimeSpan.FromMilliseconds(100));
-            Console.WriteLine(lastTime);
             if (_list[counter] >= lastTime)
                 continue;
-            DisplayButtonToClick(_listFloats[counter]);
+            _signalUpdateCallback.Invoke(_listFloats[counter]);
             counter++;
             if (_list[counter] >= lastTime)
                 continue;
-            Console.WriteLine("need to be higher density");
+            Log.Debug("Not enough content to play at");
             counter++;
         }
+
+        return Task.CompletedTask;
     }
 
-    private static void DisplayButtonToClick(float value)
+    private static void DisplaySignalToConsole(float value)
     {
         switch (value)
         {

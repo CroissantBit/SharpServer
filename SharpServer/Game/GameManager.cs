@@ -3,9 +3,9 @@ using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
 using SharpServer.Database;
-using SharpServer.FfmpegWrapper;
 using SharpServer.Message;
 using SharpServer.Servers;
+using SharpServer.Song;
 
 namespace SharpServer.Game;
 
@@ -44,30 +44,41 @@ public class GameManager : IMessageHandler
     public void PlayVideo(int videoId)
     {
         var video = VideoManager.GetVideo(videoId);
-        // TODO
-        // FFmpegWrapper.GetFFmpegWrapper().GetVideoStream(video)
-        var stream = null as Stream;
 
-        var task = Task.Run(async () =>
+        _playerState = PlayerState.Active;
+        var playerState = new PlayerStateUpdate
         {
-            await Task.Delay(5000);
-            var playerState = new PlayerStateUpdate
-            {
-                State = _playerState,
-                VideoMetadata = video.toVideoMetadata()
-            };
-            SendToAll(playerState);
-        });
+            State = _playerState,
+            VideoMetadata = video.ToVideoMetadata()
+        };
+        SendToAll(playerState);
+        var audioManager = new AudioManager(video.Name, HandleAudioStreamUpdate);
+        // Let the clients prepare for the video
+        Thread.Sleep(1000);
+        var audioStreamTask = audioManager.Play();
+        Log.Debug($"Playing video with id {video.Id}");
 
-        var pixels = VideoStream.ReadFrame(stream, 240, 280);
-
-        Console.WriteLine(pixels.Length);
-        foreach (var pixel in pixels)
-            Console.WriteLine(pixel);
-        Console.WriteLine("Done");
+        audioStreamTask.Wait();
+        Log.Debug($"Done playing video with id {video.Id}");
     }
 
-    public void SendToAll(IMessage msg)
+    private void HandleAudioStreamUpdate(float value)
+    {
+        var signalStateUpdate = new SignalStateUpdate
+        {
+            Direction = value switch
+            {
+                < 0.2f => SignalDirection.Right,
+                < 0.4f => SignalDirection.Left,
+                < 0.6f => SignalDirection.Up,
+                _ => SignalDirection.Down
+            }
+        };
+        Console.WriteLine(signalStateUpdate.Direction);
+        SendToAll(signalStateUpdate);
+    }
+
+    private void SendToAll(IMessage msg)
     {
         _serialServer?.SendAll(msg);
     }
@@ -96,7 +107,7 @@ public class GameManager : IMessageHandler
 
                 var videoMetadataResponse = new VideoMetadataResponse();
                 foreach (var video in videoList)
-                    videoMetadataResponse.VideosMetadata.Add(video.toVideoMetadata());
+                    videoMetadataResponse.VideosMetadata.Add(video.ToVideoMetadata());
 
                 client.Send(videoMetadataResponse);
                 break;
@@ -106,24 +117,17 @@ public class GameManager : IMessageHandler
                 try
                 {
                     if (_playerState != PlayerState.Idle)
-                        throw new Exception("Player is not idle");
-
-                    var video = VideoManager.GetVideo(playerPlayRequest.VideoId);
+                        throw new Exception(
+                            "Player is currently active and cannot play another video"
+                        );
                     playerPlayResponse.Success = true;
                     client.Send(playerPlayResponse);
 
-                    // Inform all clients that the video playback is about to start
-                    _playerState = PlayerState.Active;
-                    var playerState = new PlayerStateUpdate
-                    {
-                        State = _playerState,
-                        VideoMetadata = video.toVideoMetadata()
-                    };
-                    SendToAll(playerState);
+                    PlayVideo(playerPlayRequest.VideoId);
                 }
                 catch (Exception e)
                 {
-                    Log.Debug($"Failed to handle PlayerPlayRequest: {e}");
+                    Log.Warning($"Failed to handle PlayerPlayRequest: {e}");
                     playerPlayResponse.Success = false;
                     client.Send(playerPlayResponse);
                 }

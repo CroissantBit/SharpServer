@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using DotNetEnv;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 
@@ -64,8 +65,10 @@ public class UploadController
             password = form["password"];
         }
 
-        //save file to disc
-        var filePathMp4 = "./bin/Mp4Files/" + songName + ".mp4";
+        // Save file to disk
+
+        Directory.CreateDirectory(Env.GetString("CACHE_DIR") + "/Mp4Files");
+        var filePathMp4 = Env.GetString("CACHE_DIR") + "/Mp4Files/" + songName + ".mp4";
 
         await using (var stream = new FileStream(filePathMp4, FileMode.Create))
         {
@@ -74,7 +77,8 @@ public class UploadController
 
         String duration = FFmpegWrapper.GetFFmpegWrapper().GetSongDuration(songName);
 
-        var filePathWav = $"./bin/WavFiles/{songName}.wav";
+        Directory.CreateDirectory(Env.GetString("CACHE_DIR") + "/WavFiles");
+        var filePathWav = $"{Env.GetString("CACHE_DIR")}/WavFiles/{songName}.wav";
         FFmpegWrapper.GetFFmpegWrapper().CreateWavFile(songName, filePathWav);
 
         string mp4ObjectName = CreateObjectName(songName, ".mp4");
