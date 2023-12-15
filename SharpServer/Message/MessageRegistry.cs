@@ -25,13 +25,14 @@ public static class MessageRegistry
             { 10, new Croissantbit.SignalSequenceFrameUpdate() },
             { 11, new Croissantbit.SignalUpdateRequest() },
             { 12, new Croissantbit.SignalUpdateResponse() },
-            { 13, new Croissantbit.DeviceInfoRequest() },
-            { 14, new Croissantbit.DeviceInfoListRequest() },
-            { 15, new Croissantbit.DeviceInfoResponse() },
-            { 16, new Croissantbit.PlayerPlayRequest() },
-            { 17, new Croissantbit.PlayerStopRequest() },
-            { 18, new Croissantbit.PlayerRequestResponse() },
-            { 19, new Croissantbit.PlayerStateUpdate() }
+            { 13, new Croissantbit.SignalStateUpdate() },
+            { 14, new Croissantbit.DeviceInfoRequest() },
+            { 15, new Croissantbit.DeviceInfoListRequest() },
+            { 16, new Croissantbit.DeviceInfoResponse() },
+            { 17, new Croissantbit.PlayerPlayRequest() },
+            { 18, new Croissantbit.PlayerStopRequest() },
+            { 19, new Croissantbit.PlayerRequestResponse() },
+            { 20, new Croissantbit.PlayerStateUpdate() }
         };
 
     private static readonly Dictionary<string, short> MessageNameId =
@@ -49,13 +50,14 @@ public static class MessageRegistry
             { Croissantbit.SignalSequenceFrameUpdate.Descriptor.Name, 10 },
             { Croissantbit.SignalUpdateRequest.Descriptor.Name, 11 },
             { Croissantbit.SignalUpdateResponse.Descriptor.Name, 12 },
-            { Croissantbit.DeviceInfoRequest.Descriptor.Name, 13 },
-            { Croissantbit.DeviceInfoListRequest.Descriptor.Name, 14 },
-            { Croissantbit.DeviceInfoResponse.Descriptor.Name, 15 },
-            { Croissantbit.PlayerPlayRequest.Descriptor.Name, 16 },
-            { Croissantbit.PlayerStopRequest.Descriptor.Name, 17 },
-            { Croissantbit.PlayerRequestResponse.Descriptor.Name, 18 },
-            { Croissantbit.PlayerStateUpdate.Descriptor.Name, 19 }
+            { Croissantbit.SignalStateUpdate.Descriptor.Name, 13 },
+            { Croissantbit.DeviceInfoRequest.Descriptor.Name, 14 },
+            { Croissantbit.DeviceInfoListRequest.Descriptor.Name, 15 },
+            { Croissantbit.DeviceInfoResponse.Descriptor.Name, 16 },
+            { Croissantbit.PlayerPlayRequest.Descriptor.Name, 17 },
+            { Croissantbit.PlayerStopRequest.Descriptor.Name, 18 },
+            { Croissantbit.PlayerRequestResponse.Descriptor.Name, 19 },
+            { Croissantbit.PlayerStateUpdate.Descriptor.Name, 20 }
         };
 
     public static short GetIdByMessage(IMessage msg)

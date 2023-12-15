@@ -7,7 +7,7 @@ public static class VideoStream
 {
     public static Pixel[] ReadFrame(Stream videoStream, int width, int height)
     {
-      return null;
+        return null;
     }
 
     /// <summary>
