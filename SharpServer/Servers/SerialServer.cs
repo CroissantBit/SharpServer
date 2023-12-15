@@ -1,6 +1,5 @@
 ﻿using System.IO.Ports;
 using DotNetEnv;
-using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
 
@@ -38,6 +37,8 @@ public class SerialServer : Server
                 serialPort.Parity = Parity.None;
                 serialPort.StopBits = StopBits.One;
                 serialPort.DataBits = 8;
+                serialPort.RtsEnable = true;
+                serialPort.DtrEnable = true;
 
                 var client = new SerialClient(serialPort);
                 InitializeClient(client);
