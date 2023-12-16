@@ -10,29 +10,29 @@ public static class MessageRegistry
      * This will also hopefully hint at the compiler to append messages at compile time
      * 2 List are used to allow faster lookups with the downside of requiring more memory
      */
-    private static readonly Dictionary<short, IMessage> IdMessage =
+    private static readonly Dictionary<short, Func<IMessage>> IdMessage =
         new()
         {
-            { 1, new Croissantbit.Ping() },
-            { 2, new Croissantbit.Pong() },
-            { 3, new Croissantbit.RegisterClientRequest() },
-            { 4, new Croissantbit.RegisterClientResponse() },
-            { 5, new Croissantbit.VideoFrameUpdate() },
-            { 6, new Croissantbit.AudioFrameUpdate() },
-            { 7, new Croissantbit.VideoMetadataRequest() },
-            { 8, new Croissantbit.VideoMetadataListRequest() },
-            { 9, new Croissantbit.VideoMetadataResponse() },
-            { 10, new Croissantbit.SignalSequenceFrameUpdate() },
-            { 11, new Croissantbit.SignalUpdateRequest() },
-            { 12, new Croissantbit.SignalUpdateResponse() },
-            { 13, new Croissantbit.SignalStateUpdate() },
-            { 14, new Croissantbit.DeviceInfoRequest() },
-            { 15, new Croissantbit.DeviceInfoListRequest() },
-            { 16, new Croissantbit.DeviceInfoResponse() },
-            { 17, new Croissantbit.PlayerPlayRequest() },
-            { 18, new Croissantbit.PlayerStopRequest() },
-            { 19, new Croissantbit.PlayerRequestResponse() },
-            { 20, new Croissantbit.PlayerStateUpdate() }
+            { 1, () => new Croissantbit.Ping() },
+            { 2, () => new Croissantbit.Pong() },
+            { 3, () => new Croissantbit.RegisterClientRequest() },
+            { 4, () => new Croissantbit.RegisterClientResponse() },
+            { 5, () => new Croissantbit.VideoFrameUpdate() },
+            { 6, () => new Croissantbit.AudioFrameUpdate() },
+            { 7, () => new Croissantbit.VideoMetadataRequest() },
+            { 8, () => new Croissantbit.VideoMetadataListRequest() },
+            { 9, () => new Croissantbit.VideoMetadataResponse() },
+            { 10, () => new Croissantbit.SignalSequenceFrameUpdate() },
+            { 11, () => new Croissantbit.SignalUpdateRequest() },
+            { 12, () => new Croissantbit.SignalUpdateResponse() },
+            { 13, () => new Croissantbit.SignalStateUpdate() },
+            { 14, () => new Croissantbit.DeviceInfoRequest() },
+            { 15, () => new Croissantbit.DeviceInfoListRequest() },
+            { 16, () => new Croissantbit.DeviceInfoResponse() },
+            { 17, () => new Croissantbit.PlayerPlayRequest() },
+            { 18, () => new Croissantbit.PlayerStopRequest() },
+            { 19, () => new Croissantbit.PlayerRequestResponse() },
+            { 20, () => new Croissantbit.PlayerStateUpdate() }
         };
 
     private static readonly Dictionary<string, short> MessageNameId =
@@ -62,16 +62,22 @@ public static class MessageRegistry
 
     public static short GetIdByMessage(IMessage msg)
     {
-        return MessageNameId[msg.Descriptor.Name];
+        return GetIdByMessageName(msg.Descriptor.Name);
     }
 
     public static short GetIdByMessageName(string msgName)
     {
-        return MessageNameId[msgName];
+        if (MessageNameId.TryGetValue(msgName, out var id))
+            return id;
+
+        throw new ArgumentException($"No message registered with name {msgName}");
     }
 
     public static IMessage GetMessageById(short id)
     {
-        return IdMessage[id];
+        if (IdMessage.TryGetValue(id, out var messageConstructor))
+            return messageConstructor();
+
+        throw new ArgumentException($"No message registered with ID {id}");
     }
 }

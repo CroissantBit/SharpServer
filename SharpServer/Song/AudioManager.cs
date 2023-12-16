@@ -8,7 +8,7 @@ namespace SharpServer.Song;
 public class AudioManager
 {
     private readonly List<TimeSpan> _list;
-    private readonly List<float> _listFloats;
+    private readonly List<float> _listSignals;
     private readonly string _videoName;
 
     public delegate void SignalUpdateCallback(float value);
@@ -19,29 +19,29 @@ public class AudioManager
     {
         _videoName = videoName;
         _list = new List<TimeSpan>();
-        _listFloats = new List<float>();
+        _listSignals = new List<float>();
         _signalUpdateCallback = DisplaySignalToConsole;
 
         if (signalUpdateCallback != null)
             _signalUpdateCallback = signalUpdateCallback;
     }
 
-    public MusicGameLevel GenerateMusicGame()
+    public MusicGameLevel GenerateAudioMap()
     {
-        var wavFilePath = $"./bin/WavFiles/{_videoName}.wav"; // Replace with your WAV file path
+        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/WavFiles/{_videoName}.wav";
 
         using (var reader = new WaveFileReader(wavFilePath))
         {
-            Console.WriteLine("Amount of Channels " + reader.WaveFormat.Channels);
-            Console.WriteLine("Sample rate : " + reader.WaveFormat.SampleRate);
-            Console.WriteLine("Bits per Sample : " + reader.WaveFormat.BitsPerSample);
-            var floatArr = new float[2];
+            Log.Debug("Amount of Channels " + reader.WaveFormat.Channels);
+            Log.Debug("Sample rate : " + reader.WaveFormat.SampleRate);
+            Log.Debug("Bits per Sample : " + reader.WaveFormat.BitsPerSample);
             var counter = 0;
             var avg = 0f;
             var high = 0f;
             var span = new TimeSpan();
             try
             {
+                float[] floatArr;
                 while ((floatArr = reader.ReadNextSampleFrame()) != Array.Empty<float>())
                 {
                     counter++;
@@ -62,36 +62,26 @@ public class AudioManager
                     if (counter < 48000)
                         continue;
                     counter = 0;
-                    avg /= (48000 * 2);
-                    Console.WriteLine("avg : " + avg.ToString("C"));
-                    Console.WriteLine(reader.CurrentTime);
+
                     _list.Add(span);
-                    _listFloats.Add(high);
+                    _listSignals.Add(high);
                     high = 0f;
                     span = new TimeSpan();
-                    Console.WriteLine("-----------------------------------");
                     avg = 0f;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }
-
-            for (int d = 0; d < _list.Count; d++)
-            {
-                Console.WriteLine("time : " + _list[d]);
-                Console.WriteLine("floatvalue : " + _listFloats[d].ToString("C"));
-            }
         }
 
-        return new MusicGameLevel(_list, _listFloats);
+        return new MusicGameLevel(_list, _listSignals);
     }
 
     public Task Play()
     {
         var wavFilePath = $"{Env.GetString("CACHE_DIR")}/WavFiles/{_videoName}.wav";
-        var lastTime = new TimeSpan(0, 0, 0, 0, 0);
         var counter = 0;
         var waveOut = new WaveOutEvent();
         var audioFileReader = new AudioFileReader(wavFilePath);
@@ -100,24 +90,17 @@ public class AudioManager
 
         while (waveOut.PlaybackState == PlaybackState.Playing)
         {
-            if (_list[counter] >= audioFileReader.CurrentTime)
-                continue;
-            _signalUpdateCallback.Invoke(_listFloats[counter]);
-            counter++;
-        }
-
-        while (counter < _listFloats.Count - 1)
-        {
-            Thread.Sleep(100);
-            lastTime = lastTime.Add(TimeSpan.FromMilliseconds(100));
-            if (_list[counter] >= lastTime)
-                continue;
-            _signalUpdateCallback.Invoke(_listFloats[counter]);
-            counter++;
-            if (_list[counter] >= lastTime)
-                continue;
-            Log.Debug("Not enough content to play at");
-            counter++;
+            try
+            {
+                if (_list[counter] >= audioFileReader.CurrentTime)
+                    continue;
+                _signalUpdateCallback.Invoke(_listSignals[counter]);
+                counter++;
+            }
+            catch (Exception)
+            {
+                // Silent fail
+            }
         }
 
         return Task.CompletedTask;

@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
 using System.IO.Pipelines;
 using System.IO.Ports;
 using System.Runtime.InteropServices;
@@ -19,6 +20,8 @@ public class SerialClient : Client
     {
         Port = port;
         Port.DataReceived += HandleDataReceived;
+        Port.ErrorReceived += (sender, args) =>
+            Log.Warning($"Serial port {Port.PortName} encountered an error: {args.EventType}");
         Port.Open();
     }
 
@@ -96,7 +99,7 @@ public class SerialClient : Client
         var outStream = new MemoryStream();
         pipe.Reader.CopyToAsync(outStream);
         SendRaw(outStream.ToArray());
-        Console.WriteLine(BitConverter.ToString(outStream.ToArray()));
+        Log.Debug(BitConverter.ToString(outStream.ToArray()));
     }
 
     public override void SendRaw(byte[] msg)

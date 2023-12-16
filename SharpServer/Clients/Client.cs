@@ -13,6 +13,8 @@ public abstract class Client : IMessageHandler
     public event Action<Client>? OnTimeout;
     public event Action<IMessage, Client>? OnMessageUpperServer;
     public int Id { get; } = Util.GenerateClientId();
+    public int ScreenWidth { get; protected internal set; }
+    public int ScreenHeight { get; protected internal set; }
 
     private readonly Timer _keepAliveTimer;
     private int _keepAliveProbesLeft = KeepAliveProbesLeftDefault;

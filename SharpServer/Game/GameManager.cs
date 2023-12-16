@@ -16,6 +16,7 @@ public class GameManager : IMessageHandler
     private HttpServer? _httpServer;
 
     private PlayerState _playerState = PlayerState.Idle;
+    private SignalDirection _currentSignalDirection;
 
     public GameManager(GameManagerServers servers)
     {
@@ -26,8 +27,7 @@ public class GameManager : IMessageHandler
     {
         if (_servers.HttpServer)
         {
-            _httpServer = new HttpServer(cancelToken);
-            _httpServer.OnMessageUpperManager += HandleMessage;
+            _httpServer = new HttpServer(this, cancelToken);
         }
 
         if (_servers.SerialServer)
@@ -46,20 +46,23 @@ public class GameManager : IMessageHandler
         var video = VideoManager.GetVideo(videoId);
 
         _playerState = PlayerState.Active;
-        var playerState = new PlayerStateUpdate
-        {
-            State = _playerState,
-            VideoMetadata = video.ToVideoMetadata()
-        };
+        var playerState = new PlayerStateUpdate { State = _playerState };
         SendToAll(playerState);
+
         var audioManager = new AudioManager(video.Name, HandleAudioStreamUpdate);
+        audioManager.GenerateAudioMap();
+
         // Let the clients prepare for the video
         Thread.Sleep(1000);
-        var audioStreamTask = audioManager.Play();
         Log.Debug($"Playing video with id {video.Id}");
+        var audioStreamTask = audioManager.Play();
 
         audioStreamTask.Wait();
         Log.Debug($"Done playing video with id {video.Id}");
+
+        _playerState = PlayerState.Idle;
+        playerState.State = _playerState;
+        SendToAll(playerState);
     }
 
     private void HandleAudioStreamUpdate(float value)
@@ -68,13 +71,14 @@ public class GameManager : IMessageHandler
         {
             Direction = value switch
             {
-                < 0.2f => SignalDirection.Right,
-                < 0.4f => SignalDirection.Left,
-                < 0.6f => SignalDirection.Up,
+                < 0.25f => SignalDirection.Right,
+                < 0.5f => SignalDirection.Left,
+                < 0.75f => SignalDirection.Up,
                 _ => SignalDirection.Down
             }
         };
-        Console.WriteLine(signalStateUpdate.Direction);
+        Log.Debug(signalStateUpdate.Direction.ToString());
+        _currentSignalDirection = signalStateUpdate.Direction;
         SendToAll(signalStateUpdate);
     }
 
@@ -89,8 +93,19 @@ public class GameManager : IMessageHandler
             throw new ArgumentNullException(nameof(client));
         switch (msg)
         {
-            case RegisterClientRequest:
-                _serialServer?.AddClient(client);
+            case RegisterClientRequest registerClientRequest:
+                client.ScreenHeight = registerClientRequest.Height;
+                client.ScreenWidth = registerClientRequest.Width;
+
+                try
+                {
+                    _serialServer?.AddClient(client);
+                }
+                catch (Exception e)
+                {
+                    Log.Warning($"Failed to add client to serial server: {e}");
+                }
+
                 var response = new RegisterClientResponse
                 {
                     ClientId = client.Id,
@@ -110,6 +125,25 @@ public class GameManager : IMessageHandler
                     videoMetadataResponse.VideosMetadata.Add(video.ToVideoMetadata());
 
                 client.Send(videoMetadataResponse);
+                break;
+
+            case SignalUpdateRequest signalUpdateRequest:
+                if (_playerState != PlayerState.Active)
+                    break;
+                SignalUpdateResponse signalUpdateResponse = new();
+
+                // Enum might not be defined by the client, if so we treat is as a left signal
+                if (!Enum.IsDefined(signalUpdateRequest.Direction))
+                {
+                    signalUpdateResponse.Success = true;
+                }
+                else
+                {
+                    signalUpdateResponse.Success =
+                        signalUpdateRequest.Direction == _currentSignalDirection;
+                }
+
+                client.Send(signalUpdateResponse);
                 break;
 
             case PlayerPlayRequest playerPlayRequest:
@@ -135,6 +169,11 @@ public class GameManager : IMessageHandler
                 break;
 
             case PlayerStopRequest:
+                if (_playerState == PlayerState.Idle)
+                    break;
+                _playerState = PlayerState.Idle;
+                var playerStateUpdate = new PlayerStateUpdate { State = _playerState };
+                SendToAll(playerStateUpdate);
                 break;
         }
     }

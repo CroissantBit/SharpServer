@@ -1,4 +1,3 @@
-using System.Reflection;
 using DotNetEnv;
 using FfmpegWrapper;
 using Serilog;
@@ -29,13 +28,15 @@ if (servers is { HttpServer: false, SerialServer: false, WebsocketServer: false 
 var gameManager = new GameManager(servers);
 await gameManager.StartServers(cancelToken.Token);
 
-Console.CancelKeyPress += (sender, args) =>
+Console.CancelKeyPress += (_, args) =>
 {
     Log.Information("Stopping...");
     cancelToken.Cancel();
     args.Cancel = true;
 };
 
-gameManager.PlayVideo(20002);
+Thread.Sleep(5000);
+
+// gameManager.PlayVideo(20010);
 
 cancelToken.Token.WaitHandle.WaitOne();

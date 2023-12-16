@@ -1,3 +1,4 @@
+using Croissantbit;
 using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
@@ -5,19 +6,17 @@ using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 using SharpServer.Game;
 using SharpServer.Remote;
-using SharpServer.Song;
 
 namespace SharpServer.Servers;
 
 public class HttpServer
 {
-#pragma warning disable CS0067 // Event is never used
-    public event Action<IMessage, Client> OnMessageUpperManager = null!;
-#pragma warning restore CS0067 // Event is never used
+    private GameManager _gameManager;
     private readonly WebApplication _app;
 
-    public HttpServer(CancellationToken ctx)
+    public HttpServer(GameManager gameManager, CancellationToken ctx)
     {
+        _gameManager = gameManager;
         Log.Information("Starting HTTP server...");
         _app = WebApplication.CreateBuilder().Build();
         RegisterPaths();
@@ -105,9 +104,8 @@ public class HttpServer
                 {
                     var videoId = Convert.ToInt32(id);
                     var video = VideoManager.GetVideo(videoId);
-                    var songManager = new AudioManager(video.Name);
+                    _gameManager.PlayVideo(videoId);
 
-                    var o = songManager.Play();
                     //!important
                     //add -framerate to define the specific framerate
                     Task c = FFmpegWrapper
@@ -116,7 +114,7 @@ public class HttpServer
                             $" -i  ./bin/Mp4Files/{video.Name}.mp4 -s 140x80 -pix_fmt rgba -f image2pipe -vcodec png -"
                         );
 
-                    Task.WaitAll(c, o);
+                    c.Wait();
                     await context.Response.WriteAsync("Found video with name " + video.Name);
                 }
                 catch (Exception e)
