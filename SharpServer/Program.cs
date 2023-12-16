@@ -35,8 +35,4 @@ Console.CancelKeyPress += (_, args) =>
     args.Cancel = true;
 };
 
-Thread.Sleep(5000);
-
-// gameManager.PlayVideo(20010);
-
 cancelToken.Token.WaitHandle.WaitOne();
