@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using DotNetEnv;
+using Serilog;
 using SharpServer.Database;
 using SharpServer.Remote;
-using SharpServer.Servers;
 
 namespace SharpServer.Controller;
 
@@ -17,10 +17,10 @@ public class PlayController
 
     public async Task<string> Handle()
     {
-        var songId = _httpContext.Request.RouteValues["id"].ToString();
+        var songId = _httpContext.Request.RouteValues["id"]?.ToString();
         Console.WriteLine(songId);
         var regex = new Regex("^[0-9]+$");
-        if (!regex.IsMatch(songId))
+        if (songId != null && !regex.IsMatch(songId))
         {
             _httpContext.Response.StatusCode = 403;
             return "Nah nah nah";
@@ -33,23 +33,20 @@ public class PlayController
         Console.WriteLine(path);
         Console.WriteLine("got here");
         if (!Directory.Exists(path))
-        {
             Directory.CreateDirectory(path);
-        }
+
         var filenames = Directory.GetFiles(path);
-        var songIsOnLocalSystem = false;
         Console.WriteLine("not here");
         var filenameToSearch = list[0].Name + ".mp4";
         Console.WriteLine("file to search " + filenameToSearch);
         foreach (var songName in filenames)
         {
             Console.WriteLine("on e of entrues-" + songName);
-            if (songName.Contains(filenameToSearch))
-            {
-                Console.WriteLine("found");
-                _httpContext.Response.StatusCode = 200;
-                return list[0].Name;
-            }
+            if (!songName.Contains(filenameToSearch))
+                continue;
+            Console.WriteLine("found");
+            _httpContext.Response.StatusCode = 200;
+            return list[0].Name;
         }
 
         var mp4Name = list[0].Name + ".mp4";
@@ -63,13 +60,13 @@ public class PlayController
                 .GetFileServer()
                 .DownloadFileAsync(mp3Name, Env.GetString("CACHE_DIR") + "/Mp3Files");
             Task.WaitAll(taskMp4Download, taskMp3Download);
-            Console.WriteLine("Download complete");
+            Log.Information("Download complete");
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            Log.Error(e.Message);
             _httpContext.Response.StatusCode = 503;
-            throw new Exception("Unable to downlaod files");
+            throw new Exception("Unable to download files");
         }
 
         _httpContext.Response.StatusCode = 200;

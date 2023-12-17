@@ -79,7 +79,7 @@ public class AudioManager
         return new MusicGameLevel(_list, _listSignals);
     }
 
-    public Task Play()
+    public void Play()
     {
         var wavFilePath = $"{Env.GetString("CACHE_DIR")}/Mp3Files/{_videoName}.wav";
         var counter = 0;
@@ -102,8 +102,6 @@ public class AudioManager
                 // Silent fail
             }
         }
-
-        return Task.CompletedTask;
     }
 
     private static void DisplaySignalToConsole(float value)

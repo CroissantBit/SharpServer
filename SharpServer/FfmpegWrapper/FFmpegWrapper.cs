@@ -115,7 +115,7 @@ namespace SharpServer.FfmpegWrapper
             return output;
         }
 
-        public async Task<string> CustomCommandTest(String command)
+        public void CustomCommandTest(string command)
         {
             MemoryStream copyStream = new MemoryStream();
             try
@@ -239,7 +239,8 @@ namespace SharpServer.FfmpegWrapper
                 }
 
                 _process.WaitForExit();
-                return result;
+                Task.FromResult(result);
+                return;
             }
             catch (Exception e)
             {
@@ -251,7 +252,7 @@ namespace SharpServer.FfmpegWrapper
             }
 
             _process.StartInfo.RedirectStandardError = true;
-            return String.Empty;
+            Task.FromResult(string.Empty);
         }
 
         private void parseBitmap(Stream stream)

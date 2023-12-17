@@ -115,29 +115,15 @@ public class HttpServer
             "/play/{id}",
             async (HttpContext context, string id) =>
             {
-                Console.WriteLine("dsfbghdsufgb");
                 try
                 {
-                    PlayController playController = new PlayController(context);
-                    string songName = await playController.Handle();
-                    Console.WriteLine(songName);
                     var videoId = Convert.ToInt32(id);
-                    //var video = VideoManager.GetVideo(videoId);
-                    //_gameManager.PlayVideo(videoId);
-                    Console.WriteLine(videoId);
-                    //Console.WriteLine(video);
-                    //!important
-                    //add -framerate to define the specific framerate
-                    var path = Env.GetString("CACHE_DIR") + "\\Mp4Files\\" + songName + ".mp4";
-                    Console.WriteLine(path);
-                    Task c = FFmpegWrapper
-                        .GetFFmpegWrapper()
-                        .CustomCommandTest(
-                            $" -f mp4 -i  {path} -s 426x240 -vf fps=10 -pix_fmt rgba -f image2pipe -vcodec png -"
-                        );
+                    var playController = new PlayController(context);
+                    await playController.Handle();
 
-                    c.Wait();
-                    await context.Response.WriteAsync("Found video with name " + songName);
+                    _gameManager.PlayVideo(videoId).Wait();
+
+                    await context.Response.WriteAsync("Found video with id " + videoId);
                 }
                 catch (Exception e)
                 {

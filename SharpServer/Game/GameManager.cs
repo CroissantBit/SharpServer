@@ -1,8 +1,10 @@
 using Croissantbit;
+using DotNetEnv;
 using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
 using SharpServer.Database;
+using SharpServer.FfmpegWrapper;
 using SharpServer.Message;
 using SharpServer.Servers;
 using SharpServer.Song;
@@ -44,22 +46,30 @@ public class GameManager : IMessageHandler
     public Task PlayVideo(int videoId)
     {
         var video = VideoManager.GetVideo(videoId);
-
-        _playerState = PlayerState.Active;
-        var playerState = new PlayerStateUpdate { State = _playerState };
-        SendToAll(playerState);
+        var path = Env.GetString("CACHE_DIR") + @"\Mp4Files\" + video.Name + ".mp4";
 
         var audioManager = new AudioManager(video.Name, HandleAudioStreamUpdate);
         audioManager.GenerateAudioMap();
 
+        Log.Debug($"Playing video with id {video.Id}");
+        _playerState = PlayerState.Active;
+        var playerState = new PlayerStateUpdate { State = _playerState };
+        SendToAll(playerState);
+
         // Let the clients prepare for the video
         Thread.Sleep(1000);
-        Log.Debug($"Playing video with id {video.Id}");
-        var audioStreamTask = audioManager.Play();
 
-        audioStreamTask.Wait();
+        var wrapper = FFmpegWrapper.GetFFmpegWrapper();
+        Parallel.Invoke(
+            () => audioManager.Play(),
+            () =>
+                wrapper.CustomCommandTest(
+                    $" -f mp4 -i  {path} -s 426x240 -vf fps=10 -pix_fmt rgba -f image2pipe -vcodec png -"
+                )
+        );
+
+        Thread.Sleep(1000);
         Log.Debug($"Done playing video with id {video.Id}");
-
         _playerState = PlayerState.Idle;
         playerState.State = _playerState;
         SendToAll(playerState);
