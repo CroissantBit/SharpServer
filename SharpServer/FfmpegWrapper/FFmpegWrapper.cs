@@ -216,8 +216,6 @@ namespace SharpServer.FfmpegWrapper
                         {
                             tempByteArray[j] = tempBuf[0];
                         }
-
-                        
                     }
 
                     copyStream.Write(tempByteArray, 0, i + 4);
@@ -245,7 +243,6 @@ namespace SharpServer.FfmpegWrapper
             }
             catch (Exception e)
             {
-         
                 Console.WriteLine(e);
             }
             finally
@@ -271,28 +268,20 @@ namespace SharpServer.FfmpegWrapper
         {
             int pixelInterval = 8;
 
-            double brightnessMultiplier = 1;
             string WrittenLine = "";
-            for (
-                int y = 0;
-                y < bmp.Size.Height - (bmp.Size.Height % pixelInterval);
-                y += pixelInterval
-            )
+            for (int y = 0; y < bmp.Size.Height; y += pixelInterval)
             {
                 for (int x = 0; x < bmp.Size.Width; x++)
                 {
                     if (x % pixelInterval == 0 || x % pixelInterval == 1)
                     {
-                        WrittenLine += getSymbolFromBrightness(
-                            bmp.GetPixel(x, y).GetBrightness() * brightnessMultiplier
-                        );
+                        WrittenLine += getSymbolFromBrightness(bmp.GetPixel(x, y).GetBrightness());
                     }
                 }
 
                 WrittenLine += '\n';
                 Console.WriteLine(WrittenLine);
             }
-
         }
 
         private string getSymbolFromBrightness(double brightness)

@@ -115,7 +115,7 @@ public class HttpServer
             "/play/{id}",
             async (HttpContext context, string id) =>
             {
-                Console.WriteLine("");
+                Console.WriteLine("dsfbghdsufgb");
                 try
                 {
                     PlayController playController = new PlayController(context);

@@ -31,9 +31,14 @@ public class PlayController
             .Query<Types.Video>("select * from songs where id = " + songId + ";");
         var path = Env.GetString("CACHE_DIR") + "/Mp4Files";
         Console.WriteLine(path);
+        Console.WriteLine("got here");
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
         var filenames = Directory.GetFiles(path);
         var songIsOnLocalSystem = false;
-
+        Console.WriteLine("not here");
         var filenameToSearch = list[0].Name + ".mp4";
         Console.WriteLine("file to search " + filenameToSearch);
         foreach (var songName in filenames)
