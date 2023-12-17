@@ -79,6 +79,12 @@ public class GameManager : IMessageHandler
 
     private void HandleAudioStreamUpdate(float value)
     {
+        var randomness = new Random().NextSingle();
+        if (randomness > 0.5)
+            value += randomness;
+        else
+            value -= randomness;
+
         var signalStateUpdate = new SignalStateUpdate
         {
             Direction = value switch
