@@ -41,7 +41,7 @@ public class GameManager : IMessageHandler
         return Task.CompletedTask;
     }
 
-    public void PlayVideo(int videoId)
+    public Task PlayVideo(int videoId)
     {
         var video = VideoManager.GetVideo(videoId);
 
@@ -63,6 +63,8 @@ public class GameManager : IMessageHandler
         _playerState = PlayerState.Idle;
         playerState.State = _playerState;
         SendToAll(playerState);
+
+        return Task.CompletedTask;
     }
 
     private void HandleAudioStreamUpdate(float value)

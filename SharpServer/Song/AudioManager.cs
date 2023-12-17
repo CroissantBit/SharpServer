@@ -28,7 +28,7 @@ public class AudioManager
 
     public MusicGameLevel GenerateAudioMap()
     {
-        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/WavFiles/{_videoName}.wav";
+        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/Mp3Files/{_videoName}.wav";
 
         using (var reader = new WaveFileReader(wavFilePath))
         {
@@ -81,7 +81,7 @@ public class AudioManager
 
     public Task Play()
     {
-        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/WavFiles/{_videoName}.wav";
+        var wavFilePath = $"{Env.GetString("CACHE_DIR")}/Mp3Files/{_videoName}.wav";
         var counter = 0;
         var waveOut = new WaveOutEvent();
         var audioFileReader = new AudioFileReader(wavFilePath);
