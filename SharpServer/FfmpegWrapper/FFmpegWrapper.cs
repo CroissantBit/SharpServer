@@ -118,7 +118,6 @@ namespace SharpServer.FfmpegWrapper
         public async Task<string> CustomCommandTest(String command)
         {
             MemoryStream copyStream = new MemoryStream();
-            Console.WriteLine("should start converting");
             try
             {
                 string result = String.Empty;
@@ -130,7 +129,6 @@ namespace SharpServer.FfmpegWrapper
                 _process.Start();
                 var inputStream = _process.StandardOutput.BaseStream;
                 bool headerFound = false;
-                int counterFrames = 0;
                 var watch = new Stopwatch();
                 watch.Start();
                 while (_process.StandardOutput.Peek() > -1)
@@ -146,11 +144,11 @@ namespace SharpServer.FfmpegWrapper
                             if (x == 0)
                             {
                                 j--;
-
-                                continue;
                             }
-
-                            chunkHeader[j] = tempBuf[0];
+                            else
+                            {
+                                chunkHeader[j] = tempBuf[0];
+                            }
                         }
 
                         headerFound = true;
@@ -166,10 +164,11 @@ namespace SharpServer.FfmpegWrapper
                         if (x == 0)
                         {
                             j--;
-                            continue;
                         }
-
-                        chunk[j] = tempBuf[0];
+                        else
+                        {
+                            chunk[j] = tempBuf[0];
+                        }
                     }
 
                     copyStream.Write(chunk, 0, 4);
@@ -189,10 +188,11 @@ namespace SharpServer.FfmpegWrapper
                         if (x == 0)
                         {
                             j--;
-                            continue;
                         }
-
-                        chunk[j] = tempBuf[0];
+                        else
+                        {
+                            chunk[j] = tempBuf[0];
+                        }
                     }
 
                     copyStream.Write(chunk, 0, 4);
@@ -211,16 +211,18 @@ namespace SharpServer.FfmpegWrapper
                         if (x == 0)
                         {
                             j--;
-                            continue;
+                        }
+                        else
+                        {
+                            tempByteArray[j] = tempBuf[0];
                         }
 
-                        tempByteArray[j] = tempBuf[0];
+                        
                     }
 
                     copyStream.Write(tempByteArray, 0, i + 4);
                     if (new string(str) == "IEND")
                     {
-                        counterFrames++;
                         parseBitmap(copyStream);
                         copyStream.Dispose();
                         copyStream = new MemoryStream();
