@@ -81,9 +81,9 @@ public class GameManager : IMessageHandler
     {
         var randomness = new Random().NextSingle();
         if (randomness > 0.5)
-            value += randomness;
+            value += randomness % 0.2F;
         else
-            value -= randomness;
+            value -= randomness % 0.2F;
 
         var signalStateUpdate = new SignalStateUpdate
         {
