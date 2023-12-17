@@ -78,7 +78,9 @@ public class UploadController
         String duration = FFmpegWrapper.GetFFmpegWrapper().GetSongDuration(songName);
 
         Directory.CreateDirectory(Env.GetString("CACHE_DIR") + "/Mp3Files");
+
         var filePathWav = $"{Env.GetString("CACHE_DIR")}/Mp3Files/{songName}.wav";
+        Console.WriteLine(filePathWav);
         FFmpegWrapper.GetFFmpegWrapper().CreateWavFile(songName, filePathWav);
 
         string mp4ObjectName = CreateObjectName(songName, ".mp4");

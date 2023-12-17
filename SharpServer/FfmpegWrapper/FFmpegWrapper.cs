@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 using System.Text;
+using DotNetEnv;
 using FfmpegWrapper;
 using Serilog;
 
@@ -55,11 +56,10 @@ namespace SharpServer.FfmpegWrapper
 
         public void CreateWavFile(string fileName, string path)
         {
+            var pathFile = Env.GetString("CACHE_DIR") + "/Mp4Files/" + fileName + ".mp4";
             try
             {
-                string command =
-                    $" -i ./bin/Mp4Files/{fileName}.mp4 -vn -ar 44100 -ac 2 -ab 192k -f wav "
-                    + path;
+                string command = $" -i {pathFile} -vn -ar 44100 -ac 2 -ab 192k -f wav " + path;
                 _process.StartInfo.Arguments = command;
                 _process.Start();
                 _process.WaitForExit();
@@ -108,7 +108,8 @@ namespace SharpServer.FfmpegWrapper
 
         public string GetSongDuration(string songName)
         {
-            var commands = $"-i ./bin/Mp4Files/{songName}.mp4";
+            var pathFile = Env.GetString("CACHE_DIR") + "/Mp4Files/" + songName + ".mp4";
+            var commands = $"-i {pathFile}";
             var output = customCommand(commands);
 
             return output;
@@ -117,7 +118,7 @@ namespace SharpServer.FfmpegWrapper
         public async Task<string> CustomCommandTest(String command)
         {
             MemoryStream copyStream = new MemoryStream();
-            //MemoryStream inputStream = new MemoryStream();
+            Console.WriteLine("should start converting");
             try
             {
                 string result = String.Empty;
@@ -130,7 +131,7 @@ namespace SharpServer.FfmpegWrapper
                 var inputStream = _process.StandardOutput.BaseStream;
                 bool headerFound = false;
                 int counterFrames = 0;
-                var watch = new System.Diagnostics.Stopwatch();
+                var watch = new Stopwatch();
                 watch.Start();
                 while (_process.StandardOutput.Peek() > -1)
                 {
@@ -220,20 +221,29 @@ namespace SharpServer.FfmpegWrapper
                     if (new string(str) == "IEND")
                     {
                         counterFrames++;
-                        parseBitmap(copyStream, watch);
+                        parseBitmap(copyStream);
                         copyStream.Dispose();
                         copyStream = new MemoryStream();
                         inputStream.Flush();
                         headerFound = false;
+
+                        if (watch.ElapsedMilliseconds > 100)
+                        {
+                            Log.Logger.Debug(watch.ElapsedMilliseconds.ToString());
+                        }
+                        while (watch.ElapsedMilliseconds < 100)
+                            ;
+                        watch.Reset();
+                        watch.Start();
                     }
                 }
 
                 _process.WaitForExit();
-                Console.WriteLine("soemthing wrong");
                 return result;
             }
             catch (Exception e)
             {
+         
                 Console.WriteLine(e);
             }
             finally
@@ -245,71 +255,45 @@ namespace SharpServer.FfmpegWrapper
             return String.Empty;
         }
 
-        private static void parseBitmap(Stream stream, Stopwatch watch)
+        private void parseBitmap(Stream stream)
         {
             // Create a Bitmap object from the byte array
             using (Bitmap image = new Bitmap(stream))
             {
                 Console.Clear();
-                ConvertToText(image, watch);
+                convertToText(image);
             }
         }
 
-        private static void ConvertToText(Bitmap bitmap, Stopwatch watch)
+        private void convertToText(Bitmap bmp)
         {
             int pixelInterval = 8;
+
             double brightnessMultiplier = 1;
-            //!change
-            //use first bitmap dont make a new one
-            using (Bitmap bmp = bitmap)
+            string WrittenLine = "";
+            for (
+                int y = 0;
+                y < bmp.Size.Height - (bmp.Size.Height % pixelInterval);
+                y += pixelInterval
+            )
             {
-                string WrittenLine = "";
-                for (
-                    int y = 0;
-                    y < bmp.Size.Height - (bmp.Size.Height % pixelInterval);
-                    y += pixelInterval
-                )
+                for (int x = 0; x < bmp.Size.Width; x++)
                 {
-                    for (int x = 0; x < bmp.Size.Width; x++)
+                    if (x % pixelInterval == 0 || x % pixelInterval == 1)
                     {
-                        if (x % pixelInterval == 0 || x % pixelInterval == 1) // The character height-width-ratio is approximately 2/1
-                        {
-                            //can get color from pixel here aswell
-                            WrittenLine += GetSymbolFromBrightness(
-                                bmp.GetPixel(x, y).GetBrightness() * brightnessMultiplier
-                            );
-                        }
+                        WrittenLine += getSymbolFromBrightness(
+                            bmp.GetPixel(x, y).GetBrightness() * brightnessMultiplier
+                        );
                     }
-
-                    Console.WriteLine(WrittenLine);
-                    WrittenLine = "";
                 }
+
+                WrittenLine += '\n';
+                Console.WriteLine(WrittenLine);
             }
 
-            var cv = 0;
-            //!change
-            //var cv = watch.ElapsedMilliseconds > 42 ? 0 : Convert.ToInt32(42 - watch.ElapsedMilliseconds);
-            if (watch.ElapsedMilliseconds > 42)
-            {
-                cv = 0;
-            }
-            else
-            {
-                cv = Convert.ToInt32(42 - watch.ElapsedMilliseconds);
-            }
-
-            //a frame should be seen for 42 ms
-            // processing takes up often more than 90 ms but i guess thats because of console.writeline
-
-
-            Log.Logger.Debug(cv.ToString() + " tesdt " + watch.ElapsedMilliseconds);
-            Console.WriteLine(cv);
-            Thread.Sleep(cv);
-            watch.Reset();
-            watch.Start();
         }
 
-        static string GetSymbolFromBrightness(double brightness)
+        private string getSymbolFromBrightness(double brightness)
         {
             switch ((int)(brightness * 10))
             {

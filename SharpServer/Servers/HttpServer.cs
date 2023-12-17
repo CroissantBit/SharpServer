@@ -1,7 +1,9 @@
 using Croissantbit;
+using DotNetEnv;
 using Google.Protobuf;
 using Serilog;
 using SharpServer.Clients;
+using SharpServer.Controller;
 using SharpServer.Database;
 using SharpServer.FfmpegWrapper;
 using SharpServer.Game;
@@ -18,8 +20,20 @@ public class HttpServer
     {
         _gameManager = gameManager;
         Log.Information("Starting HTTP server...");
-        _app = WebApplication.CreateBuilder().Build();
+        var builder = WebApplication.CreateBuilder();
+        builder
+            .Services
+            .AddCors(options =>
+            {
+                options.AddPolicy(
+                    "AllowAllOrigins",
+                    builder => builder.AllowAnyMethod().AllowAnyOrigin().AllowAnyHeader()
+                );
+            });
+        _app = builder.Build();
+        _app.UseCors("AllowAllOrigins");
         RegisterPaths();
+        Console.WriteLine("isrunning");
         _app.RunAsync().WaitAsync(ctx);
     }
 
@@ -70,6 +84,7 @@ public class HttpServer
             "/songs",
             async (context) =>
             {
+                Console.WriteLine("uploading");
                 var json = "";
                 var list = DatabaseClient.GetDatabase().Query<Types.Video>("SELECT * from songs;");
                 json += "[\n";
@@ -100,22 +115,29 @@ public class HttpServer
             "/play/{id}",
             async (HttpContext context, string id) =>
             {
+                Console.WriteLine("");
                 try
                 {
+                    PlayController playController = new PlayController(context);
+                    string songName = await playController.Handle();
+                    Console.WriteLine(songName);
                     var videoId = Convert.ToInt32(id);
-                    var video = VideoManager.GetVideo(videoId);
-                    _gameManager.PlayVideo(videoId);
-
+                    //var video = VideoManager.GetVideo(videoId);
+                    //_gameManager.PlayVideo(videoId);
+                    Console.WriteLine(videoId);
+                    //Console.WriteLine(video);
                     //!important
                     //add -framerate to define the specific framerate
+                    var path = Env.GetString("CACHE_DIR") + "\\Mp4Files\\" + songName + ".mp4";
+                    Console.WriteLine(path);
                     Task c = FFmpegWrapper
                         .GetFFmpegWrapper()
                         .CustomCommandTest(
-                            $" -i  ./bin/Mp4Files/{video.Name}.mp4 -s 140x80 -pix_fmt rgba -f image2pipe -vcodec png -"
+                            $" -f mp4 -i  {path} -s 426x240 -vf fps=10 -pix_fmt rgba -f image2pipe -vcodec png -"
                         );
 
                     c.Wait();
-                    await context.Response.WriteAsync("Found video with name " + video.Name);
+                    await context.Response.WriteAsync("Found video with name " + songName);
                 }
                 catch (Exception e)
                 {
